@@ -8,8 +8,6 @@ Test server for running Tabi apps in tests.
 import { TabiTestServer } from "./test-utils/server.ts";
 ```
 
-e
-
 ## Usage
 
 ```typescript
