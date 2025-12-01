@@ -5,7 +5,7 @@ Test server for running Tabi apps in tests.
 ## Installation
 
 ```typescript
-import { TabiTestServer } from "./test-utils";
+import { TabiTestServer } from "./test-utils/server.ts";
 ```
 
 e
