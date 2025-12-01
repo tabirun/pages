@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Deno
+*.tsbuildinfo
+coverage
+.coverage
+coverage*
+
+# Node.js
+node_modules
+
+# Docs build
+**/dist
