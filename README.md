@@ -1,0 +1,66 @@
+<p align="center" style="color: #343a40">
+  <h1 align="center">Tabi Pages</h1>
+</p>
+<p align="center">
+  <strong>Build Tabi powered web apps with Markdown and Preact.</strong>
+</p>
+
+<p align="center">
+  <a href="https://jsr.io/@tabirun/pages"><img src="https://jsr.io/badges/@tabirun/pages" alt="JSR"></a>
+  <a href="https://github.com/tabirun/pages/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+</p>
+<p align="center" style="color: #343a40">
+  <img src="./assets/mascot-readme.png" alt="Tabi Mascot" width="200"/>
+</p>
+
+> Tabi (旅) means "journey" in Japanese. The shortest path between two points is
+> a straight line. Tabi stays out of your way—no abstractions to fight, no magic
+> to reverse-engineer, no surprises in production. Every build should be a
+> stress free journey.
+
+## Quick Start
+
+```bash
+deno add jsr:@tabirun/app jsr:@tabirun/pages npm:preact npm:preact-render-to-string
+```
+
+Add to `deno.json`:
+
+```json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  }
+}
+```
+
+Create `dev.ts`:
+
+```typescript
+import { TabiApp } from "@tabirun/app";
+import { pages } from "@tabirun/pages";
+
+const app = new TabiApp();
+
+const { registerDevServer } = pages();
+await registerDevServer(app);
+
+Deno.serve({ port: 3000 }, app.handler);
+```
+
+Create a `pages/` directory and add `index.md`:
+
+```markdown
+---
+title: Hello, Tabi Pages!
+---
+
+# Hello, Tabi Pages!
+```
+
+Run the development server:
+
+```bash
+deno run --allow-alldev.ts
+```
