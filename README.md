@@ -43,8 +43,8 @@ import { pages } from "@tabirun/pages";
 
 const app = new TabiApp();
 
-const { registerDevServer } = pages();
-await registerDevServer(app);
+const { dev } = pages();
+await dev(app);
 
 Deno.serve({ port: 3000 }, app.handler);
 ```
