@@ -6,6 +6,7 @@
   "publish": {
     "include": [
       "pages/",
+      "preact/",
       "deno.json",
       "README.md",
       "LICENSE"
@@ -13,7 +14,8 @@
     "exclude": ["**/tests/**", "**/*.test.ts"]
   },
   "exports": {
-    "./pages.mod.ts": "./module/mod.ts"
+    ".": "./pages/mod.ts",
+    "./preact": "./preact/mod.ts"
   },
   "tasks": {
     "test": "deno test --allow-all --clean --coverage",
@@ -30,6 +32,9 @@
     "@std/fs": "jsr:@std/fs@^1.0.11",
     "@std/path": "jsr:@std/path@^1.0.8",
     "@std/testing": "jsr:@std/testing@^1.0.16",
-    "@tabirun/app": "jsr:@tabirun/app@^0.1.0"
+    "@tabirun/app": "jsr:@tabirun/app@^0.1.0",
+    "preact": "npm:preact@^10.25.4",
+    "preact-render-to-string": "npm:preact-render-to-string@^6.5.13",
+    "zod": "npm:zod@^3.24.1"
   }
 }

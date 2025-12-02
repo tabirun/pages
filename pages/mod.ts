@@ -1,6 +1,10 @@
-/**
- * no-op function for pages module
- */
-export const pages = () => {
-  return;
-};
+export { pages } from "./factory.ts";
+
+export type {
+  BuildOptions,
+  DevOptions,
+  PagesConfig,
+  PagesInstance,
+  ServeOptions,
+  SiteMetadata,
+} from "./types.ts";
