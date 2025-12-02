@@ -62,5 +62,5 @@ title: Hello, Tabi Pages!
 Run the development server:
 
 ```bash
-deno run --allow-alldev.ts
+deno run --allow-all dev.ts
 ```
