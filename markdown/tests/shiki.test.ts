@@ -1,5 +1,6 @@
-import { afterEach, describe, it } from "@std/testing/bdd";
+import { afterEach, beforeAll, describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
+import type { Highlighter } from "shiki";
 import {
   _resetShikiForTesting,
   configureHighlighter,
@@ -10,27 +11,26 @@ import {
 } from "../shiki.ts";
 
 describe("shiki", () => {
-  afterEach(() => {
-    _resetShikiForTesting();
-  });
-
   describe("getHighlighter", () => {
-    it("should return a highlighter instance", async () => {
-      const highlighter = await getHighlighter();
+    // Reuse a single highlighter instance for these tests (expensive to create)
+    let highlighter: Highlighter;
 
+    beforeAll(async () => {
+      highlighter = await getHighlighter();
+    });
+
+    it("should return a highlighter instance", () => {
       expect(highlighter).toBeDefined();
       expect(typeof highlighter.codeToHtml).toBe("function");
     });
 
     it("should return the same instance on multiple calls", async () => {
-      const first = await getHighlighter();
       const second = await getHighlighter();
 
-      expect(first).toBe(second);
+      expect(highlighter).toBe(second);
     });
 
-    it("should highlight TypeScript code", async () => {
-      const highlighter = await getHighlighter();
+    it("should highlight TypeScript code", () => {
       const html = highlighter.codeToHtml("const x: number = 1;", {
         lang: "typescript",
         theme: "github-dark",
@@ -41,8 +41,7 @@ describe("shiki", () => {
       );
     });
 
-    it("should highlight JavaScript code", async () => {
-      const highlighter = await getHighlighter();
+    it("should highlight JavaScript code", () => {
       const html = highlighter.codeToHtml(
         'function hello() { return "world"; }',
         {
@@ -56,8 +55,7 @@ describe("shiki", () => {
       );
     });
 
-    it("should load all default languages", async () => {
-      const highlighter = await getHighlighter();
+    it("should load all default languages", () => {
       const loadedLangs = highlighter.getLoadedLanguages();
 
       for (const lang of DEFAULT_LANGUAGES) {
@@ -106,6 +104,15 @@ describe("shiki", () => {
   });
 
   describe("configureHighlighter", () => {
+    // These tests need fresh state since they test configuration before creation
+    beforeAll(() => {
+      _resetShikiForTesting();
+    });
+
+    afterEach(() => {
+      _resetShikiForTesting();
+    });
+
     it("should add additional languages when called before getHighlighter", async () => {
       configureHighlighter({ additionalLangs: ["elixir"] });
       const highlighter = await getHighlighter();
@@ -177,6 +184,14 @@ describe("shiki", () => {
   });
 
   describe("getConfiguredTheme", () => {
+    beforeAll(() => {
+      _resetShikiForTesting();
+    });
+
+    afterEach(() => {
+      _resetShikiForTesting();
+    });
+
     it("should return default theme initially", () => {
       expect(getConfiguredTheme()).toBe(DEFAULT_THEME);
     });

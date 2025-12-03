@@ -53,7 +53,7 @@ interface Frontmatter {
 
 interface CodeProps {
   lang?: string;
-  children: string;
+  children?: string;
 }
 ```
 

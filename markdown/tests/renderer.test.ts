@@ -1,13 +1,8 @@
-import { afterEach, describe, it } from "@std/testing/bdd";
+import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { renderMarkdown } from "../renderer.ts";
-import { _resetShikiForTesting } from "../shiki.ts";
 
 describe("renderMarkdown", () => {
-  afterEach(() => {
-    _resetShikiForTesting();
-  });
-
   describe("basic markdown", () => {
     it("should render heading", async () => {
       const html = await renderMarkdown("# Hello World");

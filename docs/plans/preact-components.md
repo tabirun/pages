@@ -309,12 +309,24 @@ function Title() {
 - [x] Make Shiki theme configurable (added `theme` option to
       `configureHighlighter`)
 - [x] Add module READMEs (markdown, pages, preact, utils)
-- [ ] Implement markdown.tsx with tests
-- [ ] Implement code.tsx with tests
+- [x] Implement markdown.tsx with tests (includes hydration preservation via
+      `data-tabi-md` + `useId`)
+- [x] Implement code.tsx with tests
 - [ ] Implement context.tsx with tests
 - [ ] Implement head.tsx with tests
 - [ ] Implement head-extractor.ts with tests
-- [ ] Update mod.ts exports
-- [ ] Update types.ts if needed
-- [ ] Run full test suite
-- [ ] Code review
+- [x] Update mod.ts exports
+- [x] Update types.ts (props colocated with components, only Frontmatter
+      remains)
+- [x] Run full test suite (137 tests, 100% coverage)
+- [x] Code review
+
+## Notes
+
+- Hydration preservation uses `data-tabi-md` attribute with `useId()` to query
+  and preserve SSR content during client hydration
+- Known limitation: DOM query runs on every re-render and content lost on
+  unmount/remount. See `docs/plans/markdown-hydration-cache.md` for planned fix
+  (deferred to client bundle work)
+- Props types colocated with components per project preference
+- Shiki test performance optimized by reusing highlighter instance

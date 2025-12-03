@@ -1,13 +1,8 @@
-import { afterEach, describe, it } from "@std/testing/bdd";
+import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { processMarkdownMarkers } from "../extractor.ts";
-import { _resetShikiForTesting } from "../shiki.ts";
 
 describe("processMarkdownMarkers", () => {
-  afterEach(() => {
-    _resetShikiForTesting();
-  });
-
   describe("marker extraction", () => {
     it("should process single marker", async () => {
       const input = "<div><tabi-markdown># Hello</tabi-markdown></div>";
