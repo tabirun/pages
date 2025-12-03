@@ -3,8 +3,6 @@ import { expect } from "@std/expect";
 import { renderMarkdown } from "../renderer.ts";
 
 describe("renderMarkdown", () => {
-  // Note: Tests share the cached Shiki highlighter instance for performance
-
   describe("basic markdown", () => {
     it("should render heading", async () => {
       const html = await renderMarkdown("# Hello World");

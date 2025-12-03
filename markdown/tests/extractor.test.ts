@@ -3,8 +3,6 @@ import { expect } from "@std/expect";
 import { processMarkdownMarkers } from "../extractor.ts";
 
 describe("processMarkdownMarkers", () => {
-  // Note: Tests share the cached Shiki highlighter instance for performance
-
   describe("marker extraction", () => {
     it("should process single marker", async () => {
       const input = "<div><tabi-markdown># Hello</tabi-markdown></div>";
