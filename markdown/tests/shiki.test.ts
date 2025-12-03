@@ -4,6 +4,8 @@ import {
   _resetShikiForTesting,
   configureHighlighter,
   DEFAULT_LANGUAGES,
+  DEFAULT_THEME,
+  getConfiguredTheme,
   getHighlighter,
 } from "../shiki.ts";
 
@@ -147,6 +149,49 @@ describe("shiki", () => {
 
       expect(loadedLangs).toContain("typescript");
       expect(loadedLangs).toContain("elixir");
+    });
+
+    it("should set custom theme when called before getHighlighter", async () => {
+      configureHighlighter({ theme: "github-light" });
+
+      expect(getConfiguredTheme()).toBe("github-light");
+
+      const highlighter = await getHighlighter();
+      const loadedThemes = highlighter.getLoadedThemes();
+
+      expect(loadedThemes).toContain("github-light");
+    });
+
+    it("should not change theme when called after getHighlighter", async () => {
+      await getHighlighter();
+      configureHighlighter({ theme: "github-light" });
+
+      expect(getConfiguredTheme()).toBe(DEFAULT_THEME);
+    });
+  });
+
+  describe("DEFAULT_THEME", () => {
+    it("should be github-dark", () => {
+      expect(DEFAULT_THEME).toBe("github-dark");
+    });
+  });
+
+  describe("getConfiguredTheme", () => {
+    it("should return default theme initially", () => {
+      expect(getConfiguredTheme()).toBe(DEFAULT_THEME);
+    });
+
+    it("should return configured theme after configuration", () => {
+      configureHighlighter({ theme: "nord" });
+
+      expect(getConfiguredTheme()).toBe("nord");
+    });
+
+    it("should reset to default after _resetShikiForTesting", () => {
+      configureHighlighter({ theme: "nord" });
+      _resetShikiForTesting();
+
+      expect(getConfiguredTheme()).toBe(DEFAULT_THEME);
     });
   });
 });

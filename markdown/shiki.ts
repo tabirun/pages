@@ -49,10 +49,16 @@ export const DEFAULT_LANGUAGES = [
 ] as const;
 
 /**
+ * Default theme for syntax highlighting.
+ */
+export const DEFAULT_THEME = "github-dark";
+
+/**
  * Configuration options for the highlighter.
- * Note: Theme is hard-coded to github-dark for v1.
  */
 export interface HighlighterConfig {
+  /** Theme for syntax highlighting. Defaults to "github-dark". */
+  theme?: string;
   /** Additional languages to load beyond the defaults. */
   additionalLangs?: string[];
 }
@@ -60,6 +66,7 @@ export interface HighlighterConfig {
 // Module-level state for singleton pattern
 let highlighter: Highlighter | null = null;
 let configuredLangs: readonly string[] = DEFAULT_LANGUAGES;
+let configuredTheme: string = DEFAULT_THEME;
 
 /**
  * Resets highlighter state. For testing only.
@@ -71,19 +78,24 @@ export function _resetShikiForTesting(): void {
   }
   highlighter = null;
   configuredLangs = DEFAULT_LANGUAGES;
+  configuredTheme = DEFAULT_THEME;
 }
 
 /**
- * Initializes the highlighter with optional additional languages.
- * Must be called before getHighlighter() if custom languages are needed.
+ * Initializes the highlighter with optional theme and additional languages.
+ * Must be called before getHighlighter() if custom configuration is needed.
  * Has no effect if called after highlighter is already initialized.
  *
  * @param config - Configuration options
+ * @param config.theme - Theme for syntax highlighting (default: "github-dark")
  * @param config.additionalLangs - Additional languages to load beyond defaults
  */
 export function configureHighlighter(config: HighlighterConfig): void {
   if (highlighter) {
     return;
+  }
+  if (config.theme) {
+    configuredTheme = config.theme;
   }
   if (config.additionalLangs?.length) {
     const unique = new Set([...DEFAULT_LANGUAGES, ...config.additionalLangs]);
@@ -92,16 +104,23 @@ export function configureHighlighter(config: HighlighterConfig): void {
 }
 
 /**
+ * Returns the configured theme for syntax highlighting.
+ */
+export function getConfiguredTheme(): string {
+  return configuredTheme;
+}
+
+/**
  * Returns a singleton Shiki highlighter instance.
- * Lazily initializes on first call with default languages.
- * Call configureHighlighter() before first use to add custom languages.
+ * Lazily initializes on first call with configured theme and languages.
+ * Call configureHighlighter() before first use to customize.
  *
  * @throws {Error} If highlighter initialization fails
  */
 export async function getHighlighter(): Promise<Highlighter> {
   if (!highlighter) {
     highlighter = await createHighlighter({
-      themes: ["github-dark"],
+      themes: [configuredTheme],
       langs: [...configuredLangs],
     });
   }

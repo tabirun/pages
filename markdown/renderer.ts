@@ -1,6 +1,6 @@
 import { Marked } from "marked";
 import { escapeHtml } from "../utils/html.ts";
-import { getHighlighter } from "./shiki.ts";
+import { getConfiguredTheme, getHighlighter } from "./shiki.ts";
 
 /**
  * Renders markdown to HTML with Shiki syntax highlighting for code blocks.
@@ -15,6 +15,7 @@ import { getHighlighter } from "./shiki.ts";
  */
 export async function renderMarkdown(markdown: string): Promise<string> {
   const hl = await getHighlighter();
+  const theme = getConfiguredTheme();
   const marked = new Marked();
 
   marked.use({
@@ -23,7 +24,7 @@ export async function renderMarkdown(markdown: string): Promise<string> {
         try {
           return hl.codeToHtml(text, {
             lang: lang || "text",
-            theme: "github-dark",
+            theme,
           });
         } catch {
           return `<pre><code>${escapeHtml(text)}</code></pre>`;
