@@ -312,7 +312,7 @@ function Title() {
 - [x] Implement markdown.tsx with tests (includes hydration preservation via
       `data-tabi-md` + `useId`)
 - [x] Implement code.tsx with tests
-- [ ] Implement context.tsx with tests
+- [x] Implement context.tsx with tests
 - [ ] Implement head.tsx with tests
 - [ ] Implement head-extractor.ts with tests
 - [x] Update mod.ts exports
