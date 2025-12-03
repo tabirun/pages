@@ -65,7 +65,10 @@ let configuredLangs: readonly string[] = DEFAULT_LANGUAGES;
  * Resets highlighter state. For testing only.
  * @internal
  */
-export function _resetForTesting(): void {
+export function _resetShikiForTesting(): void {
+  if (highlighter) {
+    highlighter.dispose();
+  }
   highlighter = null;
   configuredLangs = DEFAULT_LANGUAGES;
 }

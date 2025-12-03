@@ -1,7 +1,7 @@
 import { afterEach, describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import {
-  _resetForTesting,
+  _resetShikiForTesting,
   configureHighlighter,
   DEFAULT_LANGUAGES,
   getHighlighter,
@@ -9,7 +9,7 @@ import {
 
 describe("shiki", () => {
   afterEach(() => {
-    _resetForTesting();
+    _resetShikiForTesting();
   });
 
   describe("getHighlighter", () => {
