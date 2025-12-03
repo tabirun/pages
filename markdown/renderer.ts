@@ -1,18 +1,6 @@
 import { Marked } from "marked";
+import { escapeHtml } from "../utils/html.ts";
 import { getHighlighter } from "./shiki.ts";
-
-/**
- * Escapes HTML special characters to prevent XSS.
- * Order matters: & must be replaced first to avoid double-escaping.
- */
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 /**
  * Renders markdown to HTML with Shiki syntax highlighting for code blocks.

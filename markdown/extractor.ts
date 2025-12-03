@@ -1,20 +1,7 @@
+import { unescapeHtml } from "../utils/html.ts";
 import { renderMarkdown } from "./renderer.ts";
 
 const MARKER_REGEX = /<tabi-markdown>([\s\S]*?)<\/tabi-markdown>/g;
-
-/**
- * Unescapes HTML entities back to their original characters.
- * Used to restore markdown content that was escaped during SSR.
- * Order matters: &amp; must be last to avoid double-unescaping.
- */
-function unescapeHtml(text: string): string {
-  return text
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, "&"); // Must be last
-}
 
 /**
  * Processes all `<tabi-markdown>` markers in HTML, rendering their content
