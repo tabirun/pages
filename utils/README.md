@@ -4,25 +4,10 @@ Internal utilities shared across modules.
 
 ## API
 
-### escapeHtml
-
-Escapes HTML special characters to prevent XSS.
-
-```typescript
-import { escapeHtml } from "../utils/html.ts";
-
-escapeHtml('<div class="test">'); // "&lt;div class=&quot;test&quot;&gt;"
-```
-
-### unescapeHtml
-
-Restores escaped HTML entities to original characters.
-
-```typescript
-import { unescapeHtml } from "../utils/html.ts";
-
-unescapeHtml("&lt;div&gt;"); // "<div>"
-```
+| Function       | Description                                   |
+| -------------- | --------------------------------------------- |
+| `escapeHtml`   | Escape HTML special characters to prevent XSS |
+| `unescapeHtml` | Restore escaped HTML entities                 |
 
 ## Notes
 
