@@ -1,18 +1,6 @@
 import { Marked } from "marked";
-import { getHighlighter } from "./shiki.ts";
-
-/**
- * Escapes HTML special characters to prevent XSS.
- * Order matters: & must be replaced first to avoid double-escaping.
- */
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+import { escapeHtml } from "../utils/html.ts";
+import { getConfiguredTheme, getHighlighter } from "./shiki.ts";
 
 /**
  * Renders markdown to HTML with Shiki syntax highlighting for code blocks.
@@ -27,6 +15,7 @@ function escapeHtml(text: string): string {
  */
 export async function renderMarkdown(markdown: string): Promise<string> {
   const hl = await getHighlighter();
+  const theme = getConfiguredTheme();
   const marked = new Marked();
 
   marked.use({
@@ -35,7 +24,7 @@ export async function renderMarkdown(markdown: string): Promise<string> {
         try {
           return hl.codeToHtml(text, {
             lang: lang || "text",
-            theme: "github-dark",
+            theme,
           });
         } catch {
           return `<pre><code>${escapeHtml(text)}</code></pre>`;

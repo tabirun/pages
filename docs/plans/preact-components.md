@@ -50,7 +50,7 @@ preact/
 Internal component that renders the `<tabi-markdown>` marker.
 
 ```tsx
-import { escapeHtml } from "./utils.ts";
+import { escapeHtml } from "../utils/html.ts";
 
 export interface MarkdownProps {
   children: string;
@@ -102,7 +102,7 @@ export function Code({ lang, children }: CodeProps): preact.JSX.Element {
 Component for injecting content into `<head>`.
 
 ```tsx
-import { escapeHtml } from "./utils.ts";
+import { escapeHtml } from "../utils/html.ts";
 
 export interface HeadProps {
   children: preact.ComponentChildren;
@@ -138,6 +138,8 @@ export function Head({ children }: HeadProps): preact.JSX.Element | null {
 Extract and process `<tabi-head>` markers.
 
 ```tsx
+import { unescapeHtml } from "../utils/html.ts";
+
 const HEAD_MARKER_REGEX = /<tabi-head>([\s\S]*?)<\/tabi-head>/g;
 
 export function processHeadMarkers(
@@ -212,29 +214,13 @@ export function useFrontmatter(): Frontmatter {
 - useFrontmatter throws without provider
 - Nested components access same frontmatter
 
-### 6. utils.ts
+### 6. utils/html.ts (COMPLETED)
 
-Shared utilities. These already exist so lets extract them to a utils module and
-reuse them.
+Shared HTML utilities extracted to top-level `utils/` module. Both `markdown/`
+and `preact/` modules import from here.
 
 ```tsx
-export function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-export function unescapeHtml(text: string): string {
-  return text
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, "&");
-}
+import { escapeHtml, unescapeHtml } from "../utils/html.ts";
 ```
 
 ### 7. mod.ts
@@ -319,7 +305,10 @@ function Title() {
 
 ## Checklist
 
-- [ ] Implement utils.ts with tests
+- [x] Implement utils.ts with tests (created as `utils/html.ts` shared module)
+- [x] Make Shiki theme configurable (added `theme` option to
+      `configureHighlighter`)
+- [x] Add module READMEs (markdown, pages, preact, utils)
 - [ ] Implement markdown.tsx with tests
 - [ ] Implement code.tsx with tests
 - [ ] Implement context.tsx with tests

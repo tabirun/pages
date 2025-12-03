@@ -1,0 +1,65 @@
+# pages
+
+Factory function for creating a static site generator instance.
+
+## Installation
+
+```typescript
+import { pages } from "@tabirun/pages";
+```
+
+## Usage
+
+```typescript
+const { dev, build, serve } = pages({
+  siteMetadata: { baseUrl: "https://example.com" },
+});
+
+// Development server with hot reload
+await dev(app, { pagesDir: "./pages" });
+
+// Production build
+await build({ pagesDir: "./pages", outDir: "./dist" });
+
+// Serve static build
+serve(app, { dir: "./dist" });
+```
+
+## Options
+
+### PagesConfig
+
+| Option         | Type           | Description                        |
+| -------------- | -------------- | ---------------------------------- |
+| `siteMetadata` | `SiteMetadata` | Enables sitemap.xml and robots.txt |
+
+### SiteMetadata
+
+| Option    | Type     | Description                   |
+| --------- | -------- | ----------------------------- |
+| `baseUrl` | `string` | Site base URL (must be valid) |
+
+### DevOptions
+
+| Option     | Type     | Default     | Description          |
+| ---------- | -------- | ----------- | -------------------- |
+| `pagesDir` | `string` | `"./pages"` | Directory with pages |
+
+### BuildOptions
+
+| Option     | Type     | Default     | Description          |
+| ---------- | -------- | ----------- | -------------------- |
+| `pagesDir` | `string` | `"./pages"` | Directory with pages |
+| `outDir`   | `string` | `"./dist"`  | Output directory     |
+
+### ServeOptions
+
+| Option | Type     | Default    | Description        |
+| ------ | -------- | ---------- | ------------------ |
+| `dir`  | `string` | `"./dist"` | Directory to serve |
+
+## Notes
+
+- File-based routing: `pages/*.{md,tsx}` maps to URL paths
+- Nested layouts via `_layout.tsx` files
+- Markdown pages use GFM with Shiki syntax highlighting

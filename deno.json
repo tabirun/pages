@@ -5,8 +5,10 @@
   "nodeModulesDir": "auto",
   "publish": {
     "include": [
+      "markdown/",
       "pages/",
       "preact/",
+      "utils/",
       "deno.json",
       "README.md",
       "LICENSE"
