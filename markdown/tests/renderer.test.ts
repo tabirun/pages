@@ -1,12 +1,9 @@
-import { afterEach, describe, it } from "@std/testing/bdd";
+import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { renderMarkdown } from "../renderer.ts";
-import { _resetShikiForTesting } from "../shiki.ts";
 
 describe("renderMarkdown", () => {
-  afterEach(() => {
-    _resetShikiForTesting();
-  });
+  // Note: Tests share the cached Shiki highlighter instance for performance
 
   describe("basic markdown", () => {
     it("should render heading", async () => {

@@ -1,4 +1,15 @@
-import type { CodeProps } from "./types.ts";
+import type { JSX } from "preact";
+import { Markdown } from "./markdown.tsx";
+
+/**
+ * Props for the Code component.
+ */
+export interface CodeProps {
+  /** Language for syntax highlighting. */
+  lang?: string;
+  /** Code content. */
+  children?: string;
+}
 
 /**
  * Code component for syntax-highlighted code blocks.
@@ -13,6 +24,8 @@ import type { CodeProps } from "./types.ts";
  * </Code>
  * ```
  */
-export function Code(_props: CodeProps): unknown {
-  throw new Error("Not implemented");
+export function Code({ lang, children = "" }: CodeProps): JSX.Element {
+  const fence = lang ? `\`\`\`${lang}` : "```";
+  const markdown = `${fence}\n${children}\n\`\`\``;
+  return <Markdown>{markdown}</Markdown>;
 }

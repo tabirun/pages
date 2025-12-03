@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "license": "MIT",
   "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
   "publish": {
     "include": [
       "markdown/",
