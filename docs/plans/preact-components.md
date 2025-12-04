@@ -102,7 +102,17 @@ export function Code({ lang, children }: CodeProps): preact.JSX.Element {
 Component for injecting content into `<head>`.
 
 ```tsx
+import { render } from "preact-render-to-string";
 import { escapeHtml } from "../utils/html.ts";
+
+// Declare custom element for TypeScript
+declare module "preact" {
+  namespace JSX {
+    interface IntrinsicElements {
+      "tabi-head": JSX.HTMLAttributes<HTMLElement>;
+    }
+  }
+}
 
 export interface HeadProps {
   children: preact.ComponentChildren;
@@ -114,17 +124,13 @@ export function Head({ children }: HeadProps): preact.JSX.Element | null {
     return null;
   }
 
-  // Render children to string, wrap in marker
-  const html = renderToString(<>{children}</>);
-  const marker = `<tabi-head>${escapeHtml(html)}</tabi-head>`;
-  return (
-    <div
-      dangerouslySetInnerHTML={{ __html: marker }}
-      style={{ display: "none" }}
-    />
-  );
+  const html = render(<>{children}</>);
+  return <tabi-head dangerouslySetInnerHTML={{ __html: escapeHtml(html) }} />;
 }
 ```
+
+Note: Uses custom `<tabi-head>` element directly (no wrapper div) for cleaner
+DOM output. Module augmentation declares the custom element for TypeScript.
 
 **Tests:**
 
@@ -313,12 +319,12 @@ function Title() {
       `data-tabi-md` + `useId`)
 - [x] Implement code.tsx with tests
 - [x] Implement context.tsx with tests
-- [ ] Implement head.tsx with tests
-- [ ] Implement head-extractor.ts with tests
+- [x] Implement head.tsx with tests
+- [x] Implement head-extractor.ts with tests
 - [x] Update mod.ts exports
 - [x] Update types.ts (props colocated with components, only Frontmatter
       remains)
-- [x] Run full test suite (137 tests, 100% coverage)
+- [x] Run full test suite (184 tests, 100% coverage)
 - [x] Code review
 
 ## Notes
