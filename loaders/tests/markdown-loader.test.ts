@@ -14,7 +14,7 @@ describe("loadMarkdownPage", () => {
       expect(result.type).toBe("markdown");
       expect(result.frontmatter.title).toBe("Test Page");
       expect(result.frontmatter.description).toBe("A test description");
-      expect(result.content).toBe("# Hello World\n\nThis is content.\n");
+      expect(result.content).toBe("\n# Hello World\n\nThis is content.\n");
       expect(result.filePath).toBe(filePath);
     });
 

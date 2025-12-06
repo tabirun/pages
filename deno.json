@@ -24,8 +24,8 @@
     "./preact": "./preact/mod.ts"
   },
   "tasks": {
-    "test": "deno test --allow-all --clean --coverage",
-    "coverage": "deno coverage coverage --exclude='.*/T/.*' --exclude='.*/tests/fixtures/.*'",
+    "test": "deno test --allow-all --clean --coverage=coverage && deno coverage coverage --exclude='.*/tests/fixtures/.*'",
+    "coverage": "deno coverage coverage --exclude='.*/tests/fixtures/.*'",
     "lint": "deno lint",
     "format": "deno fmt",
     "check": "deno check ."
