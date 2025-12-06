@@ -61,3 +61,5 @@ interface CodeProps {
 
 - Code blocks flow through the unified markdown pipeline
 - Components render markers during SSR for post-processing
+- `useFrontmatter` works automatically - the framework injects the provider
+  during page rendering
