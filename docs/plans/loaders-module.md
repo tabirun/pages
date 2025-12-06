@@ -29,31 +29,19 @@ loaders/
 ```ts
 // types.ts
 import type { ComponentType } from "preact";
-import type { Frontmatter } from "../preact/types.ts";
-
-/**
- * Base frontmatter schema - extended by pages.
- */
-export interface BaseFrontmatter {
-  title?: string;
-  description?: string;
-  [key: string]: unknown;
-}
 
 /**
  * Page frontmatter with optional common fields.
  */
-export interface PageFrontmatter extends BaseFrontmatter {
-  /** Page title for <title> and <h1>. */
+export interface PageFrontmatter {
+  /** Page title. */
   title?: string;
-  /** Meta description. */
+  /** Page description. */
   description?: string;
-  /** Publication date (for blogs). */
-  date?: string;
   /** Draft status - excluded from production builds. */
   draft?: boolean;
-  /** Custom layout override. */
-  layout?: string;
+  /** Additional custom fields. */
+  [key: string]: unknown;
 }
 
 /**
@@ -157,10 +145,8 @@ const FRONTMATTER_REGEX = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 export const PageFrontmatterSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
-  date: z.string().optional(),
   draft: z.boolean().optional(),
-  layout: z.string().optional(),
-}).passthrough(); // Allow additional fields
+}).passthrough(); // Allow additional custom fields
 
 export interface ParsedFrontmatter<T> {
   frontmatter: T;
@@ -350,7 +336,6 @@ export { PageFrontmatterSchema, parseFrontmatter } from "./frontmatter.ts";
 export { FrontmatterError, LoaderError } from "./types.ts";
 
 export type {
-  BaseFrontmatter,
   LayoutProps,
   LoadedLayout,
   LoadedMarkdownPage,

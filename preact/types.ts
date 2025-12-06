@@ -6,6 +6,8 @@ export interface Frontmatter {
   title?: string;
   /** Page description. */
   description?: string;
-  /** Additional frontmatter fields. */
+  /** Draft status - excluded from production builds. */
+  draft?: boolean;
+  /** Additional custom fields. */
   [key: string]: unknown;
 }
