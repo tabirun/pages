@@ -396,25 +396,21 @@ This means:
 - **Pages** (TSX) can also use `useFrontmatter()` if needed
 - **FrontmatterProvider** is internal - users never import it
 
-## Cache Invalidation (Dev Mode)
+## Module Caching (Dev Mode)
 
-For hot reload, loaders need cache busting for TSX imports:
+Deno caches dynamic imports, which would cause stale code in dev mode. However,
+**loaders don't need to solve this** - the bundler handles it.
 
-```ts
-// In tsx-loader.ts
-async function loadTsxPage(
-  filePath: string,
-  options?: LoadOptions,
-): Promise<LoadedTsxPage> {
-  // Add cache-busting query param for dev mode
-  const url = options?.cacheBust
-    ? `file://${filePath}?t=${Date.now()}`
-    : `file://${filePath}`;
+See ADR-004 (SSR Bundling Strategy): The bundler generates fresh esbuild bundles
+for SSR, bypassing Deno's module cache entirely. Loaders are only used during
+production builds where caching isn't an issue (one-shot process).
 
-  const module = await import(url);
-  // ...
-}
-```
+In dev mode, the flow is:
+
+1. Watcher detects file change
+2. Bundler generates fresh SSR bundle (includes page + layouts + dependencies)
+3. Framework imports the fresh bundle
+4. Loaders are not involved - bundler handles loading
 
 ## Error Handling
 
