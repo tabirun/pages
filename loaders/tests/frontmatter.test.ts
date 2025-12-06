@@ -81,6 +81,25 @@ Content`;
       expect(result.frontmatter).toEqual({});
       expect(result.content).toBe("");
     });
+
+    it("throws FrontmatterError when schema requires fields but no frontmatter", () => {
+      const strictSchema = z.object({
+        title: z.string(),
+      });
+
+      const raw = "# Just content, no frontmatter";
+
+      try {
+        parseFrontmatter(raw, "/test/page.md", strictSchema);
+        throw new Error("Should have thrown");
+      } catch (error) {
+        if (error instanceof Error && error.message === "Should have thrown") {
+          throw error;
+        }
+        expect(error).toBeInstanceOf(FrontmatterError);
+        expect((error as FrontmatterError).filePath).toBe("/test/page.md");
+      }
+    });
   });
 
   describe("empty frontmatter block", () => {

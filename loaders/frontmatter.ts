@@ -65,6 +65,7 @@ export function parseFrontmatter<T = PageFrontmatter>(
   try {
     parsed = parseYaml(yamlContent);
   } catch (error) {
+    // deno-coverage-ignore-start -- parseYaml always throws Error instances, String() fallback is defensive
     throw new LoaderError(
       `Invalid YAML in frontmatter: ${
         error instanceof Error ? error.message : String(error)
@@ -72,6 +73,7 @@ export function parseFrontmatter<T = PageFrontmatter>(
       filePath,
       { cause: error instanceof Error ? error : undefined },
     );
+    // deno-coverage-ignore-stop
   }
 
   if (parsed === null || parsed === undefined) {
