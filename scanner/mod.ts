@@ -1,4 +1,5 @@
 export { scanPages } from "./scanner.ts";
+export { watchPages } from "./watcher.ts";
 
 export type {
   FileCategory,
@@ -13,4 +14,4 @@ export type {
   WatchHandle,
 } from "./types.ts";
 
-// Step 7: export { watchPages } from "./watcher.ts";
+export type { WatchOptions } from "./watcher.ts";
