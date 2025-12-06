@@ -24,8 +24,8 @@
     "./preact": "./preact/mod.ts"
   },
   "tasks": {
-    "test": "deno test --allow-all --clean --coverage",
-    "coverage": "deno coverage coverage --exclude='.*/T/.*' --exclude='.*/tests/fixtures/.*'",
+    "test": "deno test --allow-all --clean --coverage=coverage && deno coverage coverage --exclude='.*/tests/fixtures/.*'",
+    "coverage": "deno coverage coverage --exclude='.*/tests/fixtures/.*'",
     "lint": "deno lint",
     "format": "deno fmt",
     "check": "deno check ."
@@ -38,6 +38,7 @@
     "@std/fs": "jsr:@std/fs@^1.0.11",
     "@std/path": "jsr:@std/path@^1.0.8",
     "@std/testing": "jsr:@std/testing@^1.0.16",
+    "@std/yaml": "jsr:@std/yaml@^1.0.10",
     "@tabirun/app": "jsr:@tabirun/app@^0.1.0",
     "marked": "npm:marked@^15.0.0",
     "preact": "npm:preact@^10.25.4",
