@@ -82,20 +82,24 @@ export async function scanPages(options: ScanOptions): Promise<PageManifest> {
             case "error":
               systemFiles.error = entry.absolutePath;
               break;
+            // deno-coverage-ignore-start -- exhaustive check unreachable by design
             default: {
               const _exhaustive: never = classification.systemType;
               throw new Error(`Unhandled system type: ${_exhaustive}`);
             }
+              // deno-coverage-ignore-stop
           }
           break;
         }
         case "other":
           // Other files (utilities, assets, etc.) are not included in manifest
           break;
+        // deno-coverage-ignore-start -- exhaustive check unreachable by design
         default: {
           const _exhaustive: never = classification;
           throw new Error(`Unhandled classification type: ${_exhaustive}`);
         }
+          // deno-coverage-ignore-stop
       }
     }
   }
