@@ -7,6 +7,7 @@ const FrontmatterContext = createContext<Frontmatter | null>(null);
 
 /**
  * Props for the FrontmatterProvider component.
+ * @internal
  */
 export interface FrontmatterProviderProps {
   /** Frontmatter data to provide to descendants. */
@@ -18,21 +19,9 @@ export interface FrontmatterProviderProps {
 /**
  * Provides frontmatter data to descendant components.
  *
- * Wrap your page layout or component tree with this provider to make
- * frontmatter accessible via the `useFrontmatter` hook.
- *
- * @example
- * ```tsx
- * import { FrontmatterProvider } from "@tabirun/pages/preact";
- *
- * function Layout({ frontmatter, children }) {
- *   return (
- *     <FrontmatterProvider frontmatter={frontmatter}>
- *       {children}
- *     </FrontmatterProvider>
- *   );
- * }
- * ```
+ * @internal This provider is automatically injected by the framework during
+ * page rendering. Users should not need to use this directly - use the
+ * `useFrontmatter` hook instead.
  */
 export function FrontmatterProvider({
   frontmatter,
