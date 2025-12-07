@@ -1,4 +1,4 @@
-import { pages } from "@tabirun/pages";
+import { pages } from "../pages/mod.ts";
 
 const { build } = pages({
   siteMetadata: {
