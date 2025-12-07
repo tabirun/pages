@@ -39,7 +39,8 @@ import {
 export async function bundleClient(
   options: BundleClientOptions,
 ): Promise<BundleClientResult> {
-  const { page, layouts, route, outDir, mode, projectRoot } = options;
+  const { page, layouts, route, outDir, mode, projectRoot, basePath = "" } =
+    options;
 
   // Validate paths
   validatePaths(options);
@@ -100,7 +101,7 @@ export async function bundleClient(
     await ensureDir(dirname(outputPath));
     await Deno.writeTextFile(outputPath, code);
 
-    const publicPath = `/_tabi/${outputFileName}`;
+    const publicPath = `${basePath}/_tabi/${outputFileName}`;
 
     return {
       outputPath,

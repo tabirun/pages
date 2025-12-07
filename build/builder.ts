@@ -51,7 +51,7 @@ export async function buildSite(
   options: BuildSiteOptions,
 ): Promise<BuildSiteResult> {
   const startTime = performance.now();
-  const { pagesDir, outDir, document, sitemap } = options;
+  const { pagesDir, outDir, document, sitemap, basePath = "" } = options;
 
   // Validate paths
   validatePaths(options);
@@ -88,6 +88,7 @@ export async function buildSite(
         outDir,
         layoutCache,
         document,
+        basePath,
       });
       results.push(result);
     }
@@ -102,6 +103,7 @@ export async function buildSite(
       pagesDir,
       outDir,
       document,
+      basePath,
     });
     results.push(notFoundResult);
 
@@ -115,6 +117,7 @@ export async function buildSite(
       pagesDir,
       outDir,
       document,
+      basePath,
     });
     results.push(errorResult);
 
@@ -132,6 +135,7 @@ export async function buildSite(
         configPath: manifest.systemFiles.unoConfig,
         projectRoot: dirname(pagesDir),
         outDir,
+        basePath,
       });
       if (unoCompileResult.css) {
         unoResult = {
@@ -191,13 +195,15 @@ interface BuildPageOptions {
   outDir: string;
   layoutCache: Map<string, LoadedLayout>;
   document?: ComponentType<DocumentProps>;
+  basePath: string;
 }
 
 /**
  * Build a single page.
  */
 async function buildPage(options: BuildPageOptions): Promise<BuildPageResult> {
-  const { pageEntry, pagesDir, outDir, layoutCache, document } = options;
+  const { pageEntry, pagesDir, outDir, layoutCache, document, basePath } =
+    options;
   const { route, filePath, layoutChain } = pageEntry;
 
   try {
@@ -215,6 +221,7 @@ async function buildPage(options: BuildPageOptions): Promise<BuildPageResult> {
       outDir: join(outDir, BUNDLE_DIR),
       mode: "production",
       projectRoot: dirname(pagesDir),
+      basePath,
     });
 
     // Render to HTML
@@ -267,6 +274,7 @@ interface BuildSystemPageOptions {
   pagesDir: string;
   outDir: string;
   document?: ComponentType<DocumentProps>;
+  basePath: string;
 }
 
 /**
@@ -286,6 +294,7 @@ async function buildSystemPage(
     pagesDir,
     outDir,
     document,
+    basePath,
   } = options;
 
   try {
@@ -303,6 +312,7 @@ async function buildSystemPage(
       outDir: join(outDir, BUNDLE_DIR),
       mode: "production",
       projectRoot: dirname(pagesDir),
+      basePath,
     });
 
     // Render to HTML

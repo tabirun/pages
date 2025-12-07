@@ -33,6 +33,12 @@ export interface BundleClientOptions {
    * All file paths are validated to be within this directory.
    */
   projectRoot: string;
+  /**
+   * Base path prefix for the site (optional).
+   * When set, bundle public paths will be prefixed.
+   * @example "/docs"
+   */
+  basePath?: string;
 }
 
 /**
@@ -42,9 +48,9 @@ export interface BundleClientResult {
   /** Absolute path to output bundle file. */
   outputPath: string;
   /**
-   * URL path for script src.
-   * Development: "/_tabi/blog/post.js"
-   * Production: "/_tabi/blog/post-a1b2c3.js"
+   * URL path for script src (includes basePath if configured).
+   * Development: "/_tabi/blog/post.js" or "/docs/_tabi/blog/post.js"
+   * Production: "/_tabi/blog/post-a1b2c3.js" or "/docs/_tabi/blog/post-a1b2c3.js"
    */
   publicPath: string;
   /** Content hash for cache busting (production only). */
