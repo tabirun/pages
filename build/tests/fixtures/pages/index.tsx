@@ -3,5 +3,10 @@ export const frontmatter = {
 };
 
 export default function HomePage() {
-  return <h1>Welcome Home</h1>;
+  return (
+    <div>
+      <h1>Welcome Home</h1>
+      <img src="/images/logo.txt" alt="Logo" />
+    </div>
+  );
 }

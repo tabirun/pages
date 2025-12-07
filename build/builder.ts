@@ -1,5 +1,5 @@
 import { dirname, isAbsolute, join, resolve } from "@std/path";
-import { copy, emptyDir, ensureDir } from "@std/fs";
+import { emptyDir, ensureDir } from "@std/fs";
 import type { ComponentType } from "preact";
 import { bundleClient, stopEsbuild } from "../bundler/client.ts";
 import { loadLayout } from "../loaders/layout-loader.ts";
@@ -9,10 +9,12 @@ import { renderPage } from "../renderer/renderer.tsx";
 import type { DocumentProps } from "../renderer/types.ts";
 import { scanPages } from "../scanner/scanner.ts";
 import type { PageEntry } from "../scanner/types.ts";
+import { copyAssetsWithHashes, createAssetMap } from "./assets.ts";
 import {
   createDefaultErrorPage,
   createDefaultNotFoundPage,
 } from "./defaults.tsx";
+import { rewriteAssetUrls } from "./html-rewriter.ts";
 import {
   BuildError,
   type BuildPageResult,
@@ -113,26 +115,23 @@ export async function buildSite(
     });
     results.push(errorResult);
 
-    // Copy public assets (with path traversal protection)
-    const resolvedOutDir = resolve(outDir);
-    for (const asset of manifest.publicAssets) {
-      const destPath = resolve(join(outDir, asset.urlPath));
+    // Copy public assets with content hashes for cache busting
+    const hashedAssets = await copyAssetsWithHashes({
+      assets: manifest.publicAssets,
+      outDir,
+    });
+    const assetMap = createAssetMap(hashedAssets);
 
-      // deno-coverage-ignore-start -- security check: asset paths come from filesystem scanning, can't contain traversal in practice
-      // Ensure destination is within outDir (prevents path traversal)
-      if (!destPath.startsWith(resolvedOutDir + "/")) {
-        throw new BuildError(
-          `Invalid asset path: ${asset.urlPath} escapes output directory`,
-        );
-      }
-      // deno-coverage-ignore-stop
-
-      await ensureDir(dirname(destPath));
-      await copy(asset.filePath, destPath);
+    // Post-process HTML files to rewrite asset URLs
+    for (const page of results) {
+      const html = await Deno.readTextFile(page.htmlPath);
+      const rewrittenHtml = rewriteAssetUrls(html, assetMap);
+      await Deno.writeTextFile(page.htmlPath, rewrittenHtml);
     }
 
     return {
       pages: results,
+      assets: hashedAssets,
       durationMs: Math.round(performance.now() - startTime),
     };
     // deno-coverage-ignore-start -- error handling: exceptions from underlying modules are already tested there

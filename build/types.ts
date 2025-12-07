@@ -38,11 +38,27 @@ export interface BuildPageResult {
 }
 
 /**
+ * Result of copying a public asset.
+ */
+export interface BuildAssetResult {
+  /** Original URL path (e.g., "/images/logo.png"). */
+  originalPath: string;
+  /** Output URL path (may be hashed or original for well-known files). */
+  hashedPath: string;
+  /** Absolute path to the output file. */
+  outputPath: string;
+  /** Whether the asset filename was hashed for cache busting. */
+  wasHashed: boolean;
+}
+
+/**
  * Result of building the entire site.
  */
 export interface BuildSiteResult {
   /** Results for each page built. */
   pages: BuildPageResult[];
+  /** Results for each asset copied (with hashes). */
+  assets: BuildAssetResult[];
   /** Total build duration in milliseconds. */
   durationMs: number;
 }

@@ -179,18 +179,68 @@ describe("buildSite", () => {
     });
 
     it("copies public assets to output", async () => {
-      await buildSite({
+      const result = await buildSite({
         pagesDir: PAGES_DIR,
         outDir: TEST_OUT_DIR,
       });
 
-      // Check robots.txt was copied
+      // Check robots.txt was copied without hash (well-known file)
       const robotsPath = join(TEST_OUT_DIR, "robots.txt");
       const robotsExists = await exists(robotsPath);
       expect(robotsExists).toBe(true);
 
       const robotsContent = await Deno.readTextFile(robotsPath);
       expect(robotsContent).toContain("User-agent: *");
+
+      // Verify robots.txt wasn't hashed
+      const robotsAsset = result.assets.find((a) =>
+        a.originalPath === "/robots.txt"
+      );
+      expect(robotsAsset).toBeDefined();
+      expect(robotsAsset!.wasHashed).toBe(false);
+      expect(robotsAsset!.hashedPath).toBe("/robots.txt");
+    });
+
+    it("hashes regular assets for cache busting", async () => {
+      const result = await buildSite({
+        pagesDir: PAGES_DIR,
+        outDir: TEST_OUT_DIR,
+      });
+
+      // Check logo.txt was copied with hash
+      const logoAsset = result.assets.find((a) =>
+        a.originalPath === "/images/logo.txt"
+      );
+      expect(logoAsset).toBeDefined();
+      expect(logoAsset!.wasHashed).toBe(true);
+      expect(logoAsset!.hashedPath).toMatch(
+        /^\/images\/logo-[A-F0-9]{8}\.txt$/,
+      );
+
+      // Verify hashed file exists
+      const logoExists = await exists(logoAsset!.outputPath);
+      expect(logoExists).toBe(true);
+    });
+
+    it("rewrites asset URLs in HTML", async () => {
+      const result = await buildSite({
+        pagesDir: PAGES_DIR,
+        outDir: TEST_OUT_DIR,
+      });
+
+      // Get the hashed path for the logo
+      const logoAsset = result.assets.find((a) =>
+        a.originalPath === "/images/logo.txt"
+      );
+      expect(logoAsset).toBeDefined();
+
+      // Check that index.html has the rewritten asset URL
+      const indexPage = result.pages.find((p) => p.route === "/");
+      const html = await Deno.readTextFile(indexPage!.htmlPath);
+
+      // Should contain hashed path, not original
+      expect(html).toContain(logoAsset!.hashedPath);
+      expect(html).not.toContain('src="/images/logo.txt"');
     });
 
     it("cleans output directory before build", async () => {
