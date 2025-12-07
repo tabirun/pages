@@ -1,4 +1,5 @@
 import type { LoadedLayout, LoadedPage } from "../loaders/mod.ts";
+import { escapePathForJs } from "../utils/mod.ts";
 
 /**
  * Generate client entry code for a page.
@@ -39,25 +40,27 @@ export function generateClientEntry(
   if (page.type === "markdown") {
     lines.push(
       `import { FrontmatterProvider, Markdown } from "${
-        fileUrl(preactModulePath)
+        escapePathForJs(preactModulePath)
       }";`,
     );
   } else {
     lines.push(
-      `import { FrontmatterProvider } from "${fileUrl(preactModulePath)}";`,
+      `import { FrontmatterProvider } from "${
+        escapePathForJs(preactModulePath)
+      }";`,
     );
   }
 
   // Import layouts
   for (let i = 0; i < layouts.length; i++) {
     lines.push(
-      `import Layout${i} from "${fileUrl(layouts[i].filePath)}";`,
+      `import Layout${i} from "${escapePathForJs(layouts[i].filePath)}";`,
     );
   }
 
   // Import page component (TSX only)
   if (page.type === "tsx") {
-    lines.push(`import Page from "${fileUrl(page.filePath)}";`);
+    lines.push(`import Page from "${escapePathForJs(page.filePath)}";`);
   }
 
   lines.push("");
@@ -113,20 +116,4 @@ export function generateClientEntry(
   lines.push("");
 
   return lines.join("\n");
-}
-
-/**
- * Convert an absolute file path to a file:// URL with proper escaping.
- *
- * Escapes characters that could break out of JavaScript string literals
- * to prevent code injection via malicious file paths.
- */
-function fileUrl(filePath: string): string {
-  const escaped = filePath
-    .replace(/\\/g, "\\\\") // Escape backslashes first
-    .replace(/"/g, '\\"') // Escape double quotes
-    .replace(/\n/g, "\\n") // Escape newlines
-    .replace(/\r/g, "\\r") // Escape carriage returns
-    .replace(/\t/g, "\\t"); // Escape tabs
-  return `file://${escaped}`;
 }

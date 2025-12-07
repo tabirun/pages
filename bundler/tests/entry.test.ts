@@ -24,10 +24,10 @@ describe("generateClientEntry", () => {
       // Check imports
       expect(result).toContain('import { hydrate } from "preact";');
       expect(result).toContain(
-        `import { FrontmatterProvider } from "file://${PREACT_MOD_PATH}";`,
+        `import { FrontmatterProvider } from "${PREACT_MOD_PATH}";`,
       );
       expect(result).toContain(
-        'import Page from "file:///project/pages/dashboard.tsx";',
+        'import Page from "/project/pages/dashboard.tsx";',
       );
 
       // Should not import Markdown for TSX pages
@@ -75,7 +75,7 @@ describe("generateClientEntry", () => {
 
       // Check layout import
       expect(result).toContain(
-        'import Layout0 from "file:///project/pages/_layout.tsx";',
+        'import Layout0 from "/project/pages/_layout.tsx";',
       );
 
       // Check nested structure
@@ -114,13 +114,13 @@ describe("generateClientEntry", () => {
 
       // Check all layout imports
       expect(result).toContain(
-        'import Layout0 from "file:///project/pages/_layout.tsx";',
+        'import Layout0 from "/project/pages/_layout.tsx";',
       );
       expect(result).toContain(
-        'import Layout1 from "file:///project/pages/blog/_layout.tsx";',
+        'import Layout1 from "/project/pages/blog/_layout.tsx";',
       );
       expect(result).toContain(
-        'import Layout2 from "file:///project/pages/blog/posts/_layout.tsx";',
+        'import Layout2 from "/project/pages/blog/posts/_layout.tsx";',
       );
 
       // Check nesting order (root wraps inner)
@@ -155,7 +155,7 @@ describe("generateClientEntry", () => {
       // Check imports - should include Markdown
       expect(result).toContain('import { hydrate } from "preact";');
       expect(result).toContain(
-        `import { FrontmatterProvider, Markdown } from "file://${PREACT_MOD_PATH}";`,
+        `import { FrontmatterProvider, Markdown } from "${PREACT_MOD_PATH}";`,
       );
 
       // Should not import Page component
@@ -267,7 +267,7 @@ describe("generateClientEntry", () => {
       expect(result).toContain("<Page />");
     });
 
-    it("uses file:// URLs for all imports", () => {
+    it("uses absolute paths for local imports", () => {
       const page: LoadedTsxPage = {
         type: "tsx",
         frontmatter: {},
@@ -285,16 +285,14 @@ describe("generateClientEntry", () => {
 
       const result = generateClientEntry(page, layouts, PREACT_MOD_PATH);
 
-      // All local imports should use file:// URLs
-      const importLines = result
-        .split("\n")
-        .filter((line) => line.startsWith("import") && line.includes("from"));
-
-      for (const line of importLines) {
-        if (!line.includes('"preact"')) {
-          expect(line).toContain("file://");
-        }
-      }
+      // All local imports should use absolute paths
+      expect(result).toContain('import Page from "/project/pages/page.tsx"');
+      expect(result).toContain(
+        'import Layout0 from "/project/pages/_layout.tsx"',
+      );
+      expect(result).toContain(
+        `import { FrontmatterProvider } from "${PREACT_MOD_PATH}"`,
+      );
     });
 
     it("ends with newline", () => {
@@ -411,7 +409,7 @@ describe("generateClientEntry", () => {
       const result = generateClientEntry(page, [], PREACT_MOD_PATH);
 
       expect(result).toContain(
-        'import { FrontmatterProvider, Markdown } from "file:///project/preact/mod.ts";',
+        `import { FrontmatterProvider, Markdown } from "${PREACT_MOD_PATH}";`,
       );
       expect(result).toContain("<Markdown />");
     });

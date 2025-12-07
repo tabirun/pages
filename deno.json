@@ -9,6 +9,7 @@
   },
   "publish": {
     "include": [
+      "bundler/",
       "markdown/",
       "pages/",
       "preact/",
@@ -21,6 +22,7 @@
   },
   "exports": {
     ".": "./pages/mod.ts",
+    "./bundler": "./bundler/mod.ts",
     "./preact": "./preact/mod.ts"
   },
   "tasks": {
@@ -40,6 +42,7 @@
     "@std/testing": "jsr:@std/testing@^1.0.16",
     "@std/yaml": "jsr:@std/yaml@^1.0.10",
     "@tabirun/app": "jsr:@tabirun/app@^0.1.0",
+    "esbuild": "npm:esbuild@^0.24.0",
     "marked": "npm:marked@^15.0.0",
     "preact": "npm:preact@^10.25.4",
     "preact-render-to-string": "npm:preact-render-to-string@^6.5.13",
