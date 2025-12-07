@@ -245,4 +245,55 @@ describe("createAssetMap", () => {
     const map = createAssetMap(assets);
     expect(map.size).toBe(0);
   });
+
+  it("prefixes keys and values with basePath", () => {
+    const assets = [
+      {
+        originalPath: "/logo.png",
+        hashedPath: "/logo-A1B2C3D4.png",
+        outputPath: "/dist/logo-A1B2C3D4.png",
+        wasHashed: true,
+      },
+    ];
+
+    const map = createAssetMap(assets, "/docs");
+
+    expect(map.size).toBe(1);
+    expect(map.get("/docs/logo.png")).toBe("/docs/logo-A1B2C3D4.png");
+    expect(map.has("/logo.png")).toBe(false);
+  });
+
+  it("handles multi-segment basePath", () => {
+    const assets = [
+      {
+        originalPath: "/images/logo.png",
+        hashedPath: "/images/logo-A1B2C3D4.png",
+        outputPath: "/dist/images/logo-A1B2C3D4.png",
+        wasHashed: true,
+      },
+    ];
+
+    const map = createAssetMap(assets, "/my-app/v2");
+
+    expect(map.size).toBe(1);
+    expect(map.get("/my-app/v2/images/logo.png")).toBe(
+      "/my-app/v2/images/logo-A1B2C3D4.png",
+    );
+  });
+
+  it("works with empty basePath (default)", () => {
+    const assets = [
+      {
+        originalPath: "/logo.png",
+        hashedPath: "/logo-A1B2C3D4.png",
+        outputPath: "/dist/logo-A1B2C3D4.png",
+        wasHashed: true,
+      },
+    ];
+
+    const map = createAssetMap(assets, "");
+
+    expect(map.size).toBe(1);
+    expect(map.get("/logo.png")).toBe("/logo-A1B2C3D4.png");
+  });
 });

@@ -126,7 +126,7 @@ export async function buildSite(
       assets: manifest.publicAssets,
       outDir,
     });
-    const assetMap = createAssetMap(hashedAssets);
+    const assetMap = createAssetMap(hashedAssets, basePath);
 
     // Compile UnoCSS if config exists
     let unoResult: { css: string; publicPath: string } | undefined;
