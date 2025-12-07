@@ -4,6 +4,7 @@ import { join } from "@std/path";
 import { exists } from "@std/fs";
 import { TabiApp } from "@tabirun/app";
 import { pages } from "../mod.ts";
+import { PagesConfigSchema } from "../config.ts";
 
 describe("pages", () => {
   describe("factory", () => {
@@ -33,6 +34,80 @@ describe("pages", () => {
           siteMetadata: { baseUrl: "not-a-url" },
         })
       ).toThrow();
+    });
+
+    describe("basePath validation", () => {
+      describe("valid basePath values", () => {
+        it("should accept empty string", () => {
+          expect(() => pages({ basePath: "" })).not.toThrow();
+        });
+
+        it("should accept single segment", () => {
+          expect(() => pages({ basePath: "/docs" })).not.toThrow();
+        });
+
+        it("should accept multi-segment path", () => {
+          expect(() => pages({ basePath: "/docs/v2" })).not.toThrow();
+        });
+
+        it("should accept path with hyphens", () => {
+          expect(() => pages({ basePath: "/my-app" })).not.toThrow();
+        });
+
+        it("should accept path with underscores", () => {
+          expect(() => pages({ basePath: "/my_app" })).not.toThrow();
+        });
+
+        it("should accept path with leading hyphen in segment", () => {
+          expect(() => pages({ basePath: "/-docs" })).not.toThrow();
+        });
+
+        it("should accept path with trailing hyphen in segment", () => {
+          expect(() => pages({ basePath: "/docs-" })).not.toThrow();
+        });
+      });
+
+      describe("invalid basePath values", () => {
+        it("should reject missing leading slash", () => {
+          expect(() => pages({ basePath: "docs" })).toThrow(
+            "basePath must be empty or start with / and contain only lowercase alphanumeric characters, hyphens, and underscores",
+          );
+        });
+
+        it("should reject uppercase characters", () => {
+          expect(() => pages({ basePath: "/Docs" })).toThrow(
+            "basePath must be empty or start with / and contain only lowercase alphanumeric characters, hyphens, and underscores",
+          );
+        });
+
+        it("should reject special characters", () => {
+          expect(() => pages({ basePath: "/docs@v2" })).toThrow(
+            "basePath must be empty or start with / and contain only lowercase alphanumeric characters, hyphens, and underscores",
+          );
+        });
+      });
+
+      describe("trailing slash normalization", () => {
+        it("should strip single trailing slash", () => {
+          const result = PagesConfigSchema.parse({ basePath: "/docs/" });
+          expect(result.basePath).toBe("/docs");
+        });
+
+        it("should strip multiple trailing slashes", () => {
+          const result = PagesConfigSchema.parse({ basePath: "/docs//" });
+          expect(result.basePath).toBe("/docs");
+        });
+
+        it("should strip trailing slash on multi-segment path", () => {
+          const result = PagesConfigSchema.parse({ basePath: "/docs/v2/" });
+          expect(result.basePath).toBe("/docs/v2");
+        });
+
+        it("should normalize root slash to empty string", () => {
+          const result = PagesConfigSchema.parse({ basePath: "/" });
+          expect(result.basePath).toBe("");
+        });
+      });
     });
   });
 

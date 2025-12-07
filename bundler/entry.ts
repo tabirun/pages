@@ -38,7 +38,7 @@ export function generateClientEntry(
 
   // Import from framework preact modules (direct file imports)
   lines.push(
-    `import { FrontmatterProvider } from "${
+    `import { BasePathProvider, FrontmatterProvider } from "${
       escapePathForJs(preactDir)
     }/context.tsx";`,
   );
@@ -80,6 +80,12 @@ export function generateClientEntry(
   const indent = "    ";
   let currentIndent = indent;
 
+  // Open BasePathProvider
+  lines.push(
+    `${currentIndent}<BasePathProvider basePath={data.basePath ?? ""}>`,
+  );
+  currentIndent += "  ";
+
   // Open MarkdownCacheProvider
   lines.push(
     `${currentIndent}<MarkdownCacheProvider initialData={data.markdownCache}>`,
@@ -118,6 +124,10 @@ export function generateClientEntry(
   // Close MarkdownCacheProvider
   currentIndent = currentIndent.slice(0, -2);
   lines.push(`${currentIndent}</MarkdownCacheProvider>`);
+
+  // Close BasePathProvider
+  currentIndent = currentIndent.slice(0, -2);
+  lines.push(`${currentIndent}</BasePathProvider>`);
 
   lines.push("  );");
   lines.push("}");

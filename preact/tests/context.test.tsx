@@ -1,7 +1,12 @@
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { render } from "preact-render-to-string";
-import { FrontmatterProvider, useFrontmatter } from "../context.tsx";
+import {
+  BasePathProvider,
+  FrontmatterProvider,
+  useBasePath,
+  useFrontmatter,
+} from "../context.tsx";
 import type { Frontmatter } from "../types.ts";
 
 describe("FrontmatterProvider", () => {
@@ -207,6 +212,114 @@ describe("useFrontmatter", () => {
       );
 
       expect(capturedFrontmatter).toBe(frontmatter);
+    });
+  });
+});
+
+describe("BasePathProvider", () => {
+  describe("providing basePath", () => {
+    it("should provide basePath to child components", () => {
+      function Consumer() {
+        const basePath = useBasePath();
+        return <div data-base-path={basePath} />;
+      }
+
+      const html = render(
+        <BasePathProvider basePath="/docs">
+          <Consumer />
+        </BasePathProvider>,
+      );
+
+      expect(html).toContain('data-base-path="/docs"');
+    });
+
+    it("should provide empty basePath", () => {
+      function Consumer() {
+        const basePath = useBasePath();
+        return <div data-base-path={basePath || "root"} />;
+      }
+
+      const html = render(
+        <BasePathProvider basePath="">
+          <Consumer />
+        </BasePathProvider>,
+      );
+
+      expect(html).toContain('data-base-path="root"');
+    });
+
+    it("should provide multi-segment basePath", () => {
+      function Consumer() {
+        const basePath = useBasePath();
+        return <a href={`${basePath}/about`}>About</a>;
+      }
+
+      const html = render(
+        <BasePathProvider basePath="/my-app/v2">
+          <Consumer />
+        </BasePathProvider>,
+      );
+
+      expect(html).toContain('href="/my-app/v2/about"');
+    });
+  });
+
+  describe("nested access", () => {
+    it("should allow nested components to access same basePath", () => {
+      function DeepChild() {
+        const basePath = useBasePath();
+        return <span data-deep={basePath} />;
+      }
+
+      function MiddleComponent() {
+        const basePath = useBasePath();
+        return (
+          <div data-middle={basePath}>
+            <DeepChild />
+          </div>
+        );
+      }
+
+      const html = render(
+        <BasePathProvider basePath="/docs">
+          <MiddleComponent />
+        </BasePathProvider>,
+      );
+
+      expect(html).toContain('data-middle="/docs"');
+      expect(html).toContain('data-deep="/docs"');
+    });
+  });
+});
+
+describe("useBasePath", () => {
+  describe("return value", () => {
+    it("should return empty string when no provider present", () => {
+      function Consumer() {
+        const basePath = useBasePath();
+        return <div data-base-path={basePath || "empty"} />;
+      }
+
+      const html = render(<Consumer />);
+
+      expect(html).toContain('data-base-path="empty"');
+    });
+
+    it("should return the exact basePath string", () => {
+      let capturedBasePath: string | null = null;
+
+      function Consumer() {
+        capturedBasePath = useBasePath();
+        return <div />;
+      }
+
+      render(
+        <BasePathProvider basePath="/docs">
+          <Consumer />
+        </BasePathProvider>,
+      );
+
+      expect(capturedBasePath).toBe("/docs");
     });
   });
 });

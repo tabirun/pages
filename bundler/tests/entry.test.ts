@@ -24,7 +24,7 @@ describe("generateClientEntry", () => {
       // Check imports
       expect(result).toContain('import { hydrate } from "preact";');
       expect(result).toContain(
-        `import { FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
+        `import { BasePathProvider, FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
       );
       expect(result).toContain(
         `import { MarkdownCacheProvider } from "${PREACT_DIR}/markdown-cache.tsx";`,
@@ -48,6 +48,9 @@ describe("generateClientEntry", () => {
       // Check App component structure
       expect(result).toContain("function App()");
       expect(result).toContain(
+        '<BasePathProvider basePath={data.basePath ?? ""}>',
+      );
+      expect(result).toContain(
         "<MarkdownCacheProvider initialData={data.markdownCache}>",
       );
       expect(result).toContain(
@@ -56,15 +59,20 @@ describe("generateClientEntry", () => {
       expect(result).toContain("<Page />");
       expect(result).toContain("</FrontmatterProvider>");
       expect(result).toContain("</MarkdownCacheProvider>");
+      expect(result).toContain("</BasePathProvider>");
 
-      // Check nesting order: MarkdownCacheProvider wraps FrontmatterProvider
+      // Check nesting order: BasePathProvider > MarkdownCacheProvider > FrontmatterProvider
+      const basePathOpen = result.indexOf("<BasePathProvider");
       const cacheOpen = result.indexOf("<MarkdownCacheProvider");
       const frontmatterOpen = result.indexOf("<FrontmatterProvider");
       const frontmatterClose = result.indexOf("</FrontmatterProvider>");
       const cacheClose = result.indexOf("</MarkdownCacheProvider>");
+      const basePathClose = result.indexOf("</BasePathProvider>");
 
+      expect(basePathOpen).toBeLessThan(cacheOpen);
       expect(cacheOpen).toBeLessThan(frontmatterOpen);
       expect(frontmatterClose).toBeLessThan(cacheClose);
+      expect(cacheClose).toBeLessThan(basePathClose);
 
       // Check hydration
       expect(result).toContain(
@@ -172,7 +180,7 @@ describe("generateClientEntry", () => {
       // Check imports - should include Markdown and MarkdownCacheProvider
       expect(result).toContain('import { hydrate } from "preact";');
       expect(result).toContain(
-        `import { FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
+        `import { BasePathProvider, FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
       );
       expect(result).toContain(
         `import { MarkdownCacheProvider } from "${PREACT_DIR}/markdown-cache.tsx";`,
@@ -186,11 +194,15 @@ describe("generateClientEntry", () => {
 
       // Check App component uses Markdown with cache provider
       expect(result).toContain(
+        '<BasePathProvider basePath={data.basePath ?? ""}>',
+      );
+      expect(result).toContain(
         "<MarkdownCacheProvider initialData={data.markdownCache}>",
       );
       expect(result).toContain("<Markdown />");
       expect(result).not.toContain("<Page />");
       expect(result).toContain("</MarkdownCacheProvider>");
+      expect(result).toContain("</BasePathProvider>");
 
       // Check hydration
       expect(result).toContain(
@@ -320,7 +332,7 @@ describe("generateClientEntry", () => {
         'import Layout0 from "/project/pages/_layout.tsx"',
       );
       expect(result).toContain(
-        `import { FrontmatterProvider } from "${PREACT_DIR}/context.tsx"`,
+        `import { BasePathProvider, FrontmatterProvider } from "${PREACT_DIR}/context.tsx"`,
       );
       expect(result).toContain(
         `import { MarkdownCacheProvider } from "${PREACT_DIR}/markdown-cache.tsx"`,
@@ -441,7 +453,7 @@ describe("generateClientEntry", () => {
       const result = generateClientEntry(page, [], PREACT_DIR);
 
       expect(result).toContain(
-        `import { FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
+        `import { BasePathProvider, FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
       );
       expect(result).toContain(
         `import { Markdown } from "${PREACT_DIR}/markdown.tsx";`,

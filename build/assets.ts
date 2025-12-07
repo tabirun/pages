@@ -171,15 +171,26 @@ export function addHashToPath(urlPath: string, hash: string): string {
 /**
  * Create a lookup map from original paths to output paths.
  * Only includes assets that were hashed (unchanged paths don't need rewriting).
+ *
+ * When basePath is provided, both keys and values are prefixed with it.
+ * This matches what users write in their HTML (e.g., `/docs/logo.png`).
+ *
+ * @param assets - Build asset results
+ * @param basePath - Optional base path prefix
+ * @returns Map from original paths to hashed paths
  */
 export function createAssetMap(
   assets: BuildAssetResult[],
+  basePath: string = "",
 ): Map<string, string> {
   const map = new Map<string, string>();
   for (const asset of assets) {
     // Only map assets that were actually hashed
     if (asset.wasHashed) {
-      map.set(asset.originalPath, asset.hashedPath);
+      map.set(
+        `${basePath}${asset.originalPath}`,
+        `${basePath}${asset.hashedPath}`,
+      );
     }
   }
   return map;

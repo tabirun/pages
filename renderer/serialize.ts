@@ -14,6 +14,8 @@ export interface SerializedPageData {
   pageType: "markdown" | "tsx";
   /** Rendered markdown cache for hydration (id -> HTML). */
   markdownCache: Record<string, string>;
+  /** Base path prefix for the site. */
+  basePath: string;
 }
 
 /**
@@ -33,11 +35,12 @@ export interface SerializedPageData {
  * @param page - Loaded page containing frontmatter and type
  * @param route - Route path for the page
  * @param markdownCache - Rendered markdown cache from processMarkdownMarkers
+ * @param basePath - Base path prefix for the site
  * @returns Complete script tag string ready for HTML embedding
  *
  * @example
  * ```typescript
- * const script = serializePageData(page, "/blog/post", markdownCache);
+ * const script = serializePageData(page, "/blog/post", markdownCache, "/docs");
  * // Returns: <script id="__TABI_DATA__" type="application/json">{"frontmatter":...}</script>
  * ```
  */
@@ -45,12 +48,14 @@ export function serializePageData(
   page: LoadedPage,
   route: string,
   markdownCache: MarkdownCache,
+  basePath: string = "",
 ): string {
   const data: SerializedPageData = {
     frontmatter: page.frontmatter,
     route,
     pageType: page.type,
     markdownCache: Object.fromEntries(markdownCache),
+    basePath,
   };
 
   const json = JSON.stringify(data);

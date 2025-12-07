@@ -4,7 +4,7 @@
 
 export { Code } from "./code.tsx";
 export { Head } from "./head.tsx";
-export { useFrontmatter } from "./context.tsx";
+export { useBasePath, useFrontmatter } from "./context.tsx";
 
 export type { CodeProps } from "./code.tsx";
 export type { HeadProps } from "./head.tsx";

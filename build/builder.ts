@@ -1,5 +1,5 @@
 import { dirname, isAbsolute, join, resolve } from "@std/path";
-import { emptyDir, ensureDir } from "@std/fs";
+import { emptyDir, ensureDir, walk } from "@std/fs";
 import type { ComponentType } from "preact";
 import { bundleClient, stopEsbuild } from "../bundler/client.ts";
 import { loadLayout } from "../loaders/layout-loader.ts";
@@ -10,6 +10,7 @@ import type { DocumentProps } from "../renderer/types.ts";
 import { scanPages } from "../scanner/scanner.ts";
 import type { PageEntry } from "../scanner/types.ts";
 import { copyAssetsWithHashes, createAssetMap } from "./assets.ts";
+import { rewriteCssUrls } from "./css-rewriter.ts";
 import {
   createDefaultErrorPage,
   createDefaultNotFoundPage,
@@ -51,7 +52,7 @@ export async function buildSite(
   options: BuildSiteOptions,
 ): Promise<BuildSiteResult> {
   const startTime = performance.now();
-  const { pagesDir, outDir, document, sitemap } = options;
+  const { pagesDir, outDir, document, sitemap, basePath = "" } = options;
 
   // Validate paths
   validatePaths(options);
@@ -88,6 +89,7 @@ export async function buildSite(
         outDir,
         layoutCache,
         document,
+        basePath,
       });
       results.push(result);
     }
@@ -102,6 +104,7 @@ export async function buildSite(
       pagesDir,
       outDir,
       document,
+      basePath,
     });
     results.push(notFoundResult);
 
@@ -115,6 +118,7 @@ export async function buildSite(
       pagesDir,
       outDir,
       document,
+      basePath,
     });
     results.push(errorResult);
 
@@ -123,7 +127,7 @@ export async function buildSite(
       assets: manifest.publicAssets,
       outDir,
     });
-    const assetMap = createAssetMap(hashedAssets);
+    const assetMap = createAssetMap(hashedAssets, basePath);
 
     // Compile UnoCSS if config exists
     let unoResult: { css: string; publicPath: string } | undefined;
@@ -132,6 +136,7 @@ export async function buildSite(
         configPath: manifest.systemFiles.unoConfig,
         projectRoot: dirname(pagesDir),
         outDir,
+        basePath,
       });
       if (unoCompileResult.css) {
         unoResult = {
@@ -149,6 +154,17 @@ export async function buildSite(
         html = injectStylesheet(html, unoResult.publicPath);
       }
       await Deno.writeTextFile(page.htmlPath, html);
+    }
+
+    // Post-process CSS files: rewrite url() references
+    for await (const entry of walk(outDir, { exts: [".css"] })) {
+      if (entry.isFile) {
+        const css = await Deno.readTextFile(entry.path);
+        const rewritten = rewriteCssUrls(css, assetMap);
+        if (rewritten !== css) {
+          await Deno.writeTextFile(entry.path, rewritten);
+        }
+      }
     }
 
     // Generate sitemap if configured
@@ -191,13 +207,15 @@ interface BuildPageOptions {
   outDir: string;
   layoutCache: Map<string, LoadedLayout>;
   document?: ComponentType<DocumentProps>;
+  basePath: string;
 }
 
 /**
  * Build a single page.
  */
 async function buildPage(options: BuildPageOptions): Promise<BuildPageResult> {
-  const { pageEntry, pagesDir, outDir, layoutCache, document } = options;
+  const { pageEntry, pagesDir, outDir, layoutCache, document, basePath } =
+    options;
   const { route, filePath, layoutChain } = pageEntry;
 
   try {
@@ -215,6 +233,7 @@ async function buildPage(options: BuildPageOptions): Promise<BuildPageResult> {
       outDir: join(outDir, BUNDLE_DIR),
       mode: "production",
       projectRoot: dirname(pagesDir),
+      basePath,
     });
 
     // Render to HTML
@@ -224,6 +243,7 @@ async function buildPage(options: BuildPageOptions): Promise<BuildPageResult> {
       clientBundlePath: bundleResult.publicPath,
       route,
       document,
+      basePath,
     });
 
     // Write HTML file
@@ -267,6 +287,7 @@ interface BuildSystemPageOptions {
   pagesDir: string;
   outDir: string;
   document?: ComponentType<DocumentProps>;
+  basePath: string;
 }
 
 /**
@@ -286,6 +307,7 @@ async function buildSystemPage(
     pagesDir,
     outDir,
     document,
+    basePath,
   } = options;
 
   try {
@@ -303,6 +325,7 @@ async function buildSystemPage(
       outDir: join(outDir, BUNDLE_DIR),
       mode: "production",
       projectRoot: dirname(pagesDir),
+      basePath,
     });
 
     // Render to HTML
@@ -312,6 +335,7 @@ async function buildSystemPage(
       clientBundlePath: bundleResult.publicPath,
       route,
       document,
+      basePath,
     });
 
     // Write HTML file

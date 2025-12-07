@@ -10,11 +10,35 @@ export const SiteMetadataSchema: z.ZodObject<{ baseUrl: z.ZodString }> = z
   });
 
 /**
+ * Regex for valid basePath segments.
+ * Allows empty string or path starting with / containing lowercase alphanumeric, hyphens, and underscores.
+ * Examples: "", "/docs", "/my-app", "/my_app", "/docs/v2"
+ */
+const BASE_PATH_REGEX = /^(\/[a-z0-9_-]+)*$/;
+
+/**
  * Schema for pages factory configuration.
  */
-export const PagesConfigSchema: z.ZodObject<{
-  siteMetadata: z.ZodOptional<typeof SiteMetadataSchema>;
-}> = z.object({
+export const PagesConfigSchema: z.ZodType<
+  { basePath: string; siteMetadata?: { baseUrl: string } },
+  z.ZodTypeDef,
+  { basePath?: string; siteMetadata?: { baseUrl: string } }
+> = z.object({
+  /**
+   * Base path prefix for the site.
+   * Must start with / (except empty string for root), no trailing slash.
+   * Only lowercase alphanumeric and hyphens allowed in segments.
+   * @example "/docs", "/my-app/v2"
+   */
+  basePath: z
+    .string()
+    .transform((val) => val.replace(/\/+$/, ""))
+    .refine(
+      (val) => BASE_PATH_REGEX.test(val),
+      "basePath must be empty or start with / and contain only lowercase alphanumeric characters, hyphens, and underscores",
+    )
+    .optional()
+    .default(""),
   /** Site metadata - required for sitemap.xml and robots.txt generation. */
   siteMetadata: SiteMetadataSchema.optional(),
 });

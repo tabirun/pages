@@ -18,6 +18,12 @@ export interface UnoCompileOptions {
   projectRoot: string;
   /** Output directory for built files. */
   outDir: string;
+  /**
+   * Base path prefix for the site (optional).
+   * When set, stylesheet public paths will be prefixed.
+   * @example "/docs"
+   */
+  basePath?: string;
 }
 
 /**
@@ -55,7 +61,7 @@ export interface UnoCompileResult {
 export async function compileUnoCSS(
   options: UnoCompileOptions,
 ): Promise<UnoCompileResult> {
-  const { configPath, projectRoot, outDir } = options;
+  const { configPath, projectRoot, outDir, basePath = "" } = options;
 
   try {
     // Load user's UnoCSS config
@@ -92,7 +98,7 @@ export async function compileUnoCSS(
     return {
       css,
       outputPath,
-      publicPath: `/${STYLES_DIR}/${filename}`,
+      publicPath: `${basePath}/${STYLES_DIR}/${filename}`,
     };
   } catch (error) {
     if (error instanceof BuildError) {
@@ -130,8 +136,8 @@ async function loadUnoConfig(configPath: string): Promise<UserConfig> {
   }
 }
 
-/** Pattern for valid CSS public paths (defense-in-depth). */
-const VALID_CSS_PATH_PATTERN = /^\/__styles\/[A-F0-9]{8}\.css$/;
+/** Pattern for valid CSS public paths (defense-in-depth). Allows optional basePath prefix. */
+const VALID_CSS_PATH_PATTERN = /^(\/[a-z0-9_-]+)*\/__styles\/[A-F0-9]{8}\.css$/;
 
 /**
  * Inject UnoCSS stylesheet link into HTML.
@@ -151,7 +157,7 @@ export function injectStylesheet(html: string, cssPublicPath: string): string {
   // Validate path format (defense-in-depth against XSS)
   if (!VALID_CSS_PATH_PATTERN.test(cssPublicPath)) {
     throw new Error(
-      `Invalid CSS path format: ${cssPublicPath}. Expected pattern: /__styles/[A-F0-9]{8}.css`,
+      `Invalid CSS path format: ${cssPublicPath}. Expected pattern: [basePath]/__styles/[A-F0-9]{8}.css`,
     );
   }
 

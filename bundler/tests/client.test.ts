@@ -331,4 +331,68 @@ describe("bundleClient", () => {
       }
     });
   });
+
+  describe("basePath functionality", () => {
+    it("uses /_tabi/ prefix when basePath is not provided", async () => {
+      const page: LoadedTsxPage = {
+        type: "tsx",
+        frontmatter: { title: "Test Page" },
+        component: () => null,
+        filePath: join(FIXTURES_DIR, "simple-page.tsx"),
+      };
+
+      const result = await bundleClient({
+        page,
+        layouts: [],
+        route: "/test",
+        outDir: TEST_OUT_DIR,
+        mode: "development",
+        projectRoot: PROJECT_ROOT,
+      });
+
+      expect(result.publicPath).toBe("/_tabi/test.js");
+    });
+
+    it("prefixes publicPath with /docs when basePath is /docs", async () => {
+      const page: LoadedTsxPage = {
+        type: "tsx",
+        frontmatter: { title: "Docs Page" },
+        component: () => null,
+        filePath: join(FIXTURES_DIR, "simple-page.tsx"),
+      };
+
+      const result = await bundleClient({
+        page,
+        layouts: [],
+        route: "/test",
+        outDir: TEST_OUT_DIR,
+        mode: "development",
+        projectRoot: PROJECT_ROOT,
+        basePath: "/docs",
+      });
+
+      expect(result.publicPath).toBe("/docs/_tabi/test.js");
+    });
+
+    it("prefixes publicPath with /my-app/v2 when basePath is /my-app/v2", async () => {
+      const page: LoadedTsxPage = {
+        type: "tsx",
+        frontmatter: { title: "Nested Base" },
+        component: () => null,
+        filePath: join(FIXTURES_DIR, "simple-page.tsx"),
+      };
+
+      const result = await bundleClient({
+        page,
+        layouts: [],
+        route: "/test",
+        outDir: TEST_OUT_DIR,
+        mode: "development",
+        projectRoot: PROJECT_ROOT,
+        basePath: "/my-app/v2",
+      });
+
+      expect(result.publicPath).toBe("/my-app/v2/_tabi/test.js");
+    });
+  });
 });

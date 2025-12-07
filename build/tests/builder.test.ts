@@ -260,6 +260,30 @@ describe("buildSite", () => {
       expect(html).not.toContain('src="/images/logo.txt"');
     });
 
+    it("rewrites asset URLs in CSS files", async () => {
+      const result = await buildSite({
+        pagesDir: PAGES_DIR,
+        outDir: TEST_OUT_DIR,
+      });
+
+      // Get the hashed path for the logo
+      const logoAsset = result.assets.find((a) =>
+        a.originalPath === "/images/logo.txt"
+      );
+      expect(logoAsset).toBeDefined();
+
+      // Find the styles.css in output (it gets hashed too)
+      const stylesAsset = result.assets.find((a) =>
+        a.originalPath === "/styles.css"
+      );
+      expect(stylesAsset).toBeDefined();
+
+      // Read the CSS file and check that url() was rewritten
+      const css = await Deno.readTextFile(stylesAsset!.outputPath);
+      expect(css).toContain(logoAsset!.hashedPath);
+      expect(css).not.toContain('url("/images/logo.txt")');
+    });
+
     it("cleans output directory before build", async () => {
       // Create a file that should be removed
       await Deno.mkdir(TEST_OUT_DIR, { recursive: true });

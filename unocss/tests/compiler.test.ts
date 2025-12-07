@@ -80,6 +80,60 @@ describe("injectStylesheet", () => {
       injectStylesheet(html, '/__styles/A1B2C3D4.css" onload="alert(1)')
     ).toThrow("Invalid CSS path format");
   });
+
+  it("accepts paths with basePath prefix", () => {
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+</head>
+<body>
+  <h1>Hello</h1>
+</body>
+</html>`;
+    const result = injectStylesheet(html, "/docs/__styles/A1B2C3D4.css");
+
+    expect(result).toContain(
+      '<link rel="stylesheet" href="/docs/__styles/A1B2C3D4.css">',
+    );
+    expect(result).toContain(
+      '<link rel="stylesheet" href="/docs/__styles/A1B2C3D4.css">\n</head>',
+    );
+  });
+
+  it("accepts paths with multi-segment basePath prefix", () => {
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+</head>
+<body>
+  <h1>Hello</h1>
+</body>
+</html>`;
+    const result = injectStylesheet(html, "/my-docs/v1/__styles/A1B2C3D4.css");
+
+    expect(result).toContain(
+      '<link rel="stylesheet" href="/my-docs/v1/__styles/A1B2C3D4.css">',
+    );
+  });
+
+  it("accepts root paths without basePath", () => {
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+</head>
+<body>
+  <h1>Hello</h1>
+</body>
+</html>`;
+    const result = injectStylesheet(html, "/__styles/A1B2C3D4.css");
+
+    expect(result).toContain(
+      '<link rel="stylesheet" href="/__styles/A1B2C3D4.css">',
+    );
+  });
 });
 
 describe("compileUnoCSS", () => {
@@ -235,5 +289,48 @@ describe("compileUnoCSS", () => {
 
     // With empty config, no CSS is generated
     expect(result.css).toBe("");
+  });
+
+  it("generates publicPath without basePath prefix when basePath not provided", async () => {
+    await Deno.mkdir(TEST_OUT_DIR, { recursive: true });
+
+    const result = await compileUnoCSS({
+      configPath: join(FIXTURES_DIR, "uno.config.ts"),
+      projectRoot: FIXTURES_DIR,
+      outDir: TEST_OUT_DIR,
+    });
+
+    expect(result.publicPath).toMatch(/^\/__styles\/[A-F0-9]{8}\.css$/);
+    expect(result.publicPath.startsWith("/__styles/")).toBe(true);
+  });
+
+  it("generates publicPath with basePath prefix when basePath is /docs", async () => {
+    await Deno.mkdir(TEST_OUT_DIR, { recursive: true });
+
+    const result = await compileUnoCSS({
+      configPath: join(FIXTURES_DIR, "uno.config.ts"),
+      projectRoot: FIXTURES_DIR,
+      outDir: TEST_OUT_DIR,
+      basePath: "/docs",
+    });
+
+    expect(result.publicPath).toMatch(/^\/docs\/__styles\/[A-F0-9]{8}\.css$/);
+    expect(result.publicPath.startsWith("/docs/__styles/")).toBe(true);
+  });
+
+  it("generates publicPath with multi-segment basePath prefix", async () => {
+    await Deno.mkdir(TEST_OUT_DIR, { recursive: true });
+
+    const result = await compileUnoCSS({
+      configPath: join(FIXTURES_DIR, "uno.config.ts"),
+      projectRoot: FIXTURES_DIR,
+      outDir: TEST_OUT_DIR,
+      basePath: "/my-docs/v1",
+    });
+
+    expect(result.publicPath).toMatch(
+      /^\/my-docs\/v1\/__styles\/[A-F0-9]{8}\.css$/,
+    );
+    expect(result.publicPath.startsWith("/my-docs/v1/__styles/")).toBe(true);
   });
 });
