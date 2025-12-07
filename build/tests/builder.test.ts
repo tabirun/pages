@@ -407,6 +407,54 @@ describe("buildSite", () => {
     });
   });
 
+  describe("sitemap integration", () => {
+    it("generates sitemap when configured", async () => {
+      const result = await buildSite({
+        pagesDir: PAGES_DIR,
+        outDir: TEST_OUT_DIR,
+        sitemap: { baseUrl: "https://example.com" },
+      });
+
+      expect(result.sitemap).toBeDefined();
+      expect(result.sitemap!.outputPath).toContain("sitemap.xml");
+      // Should exclude system pages
+      expect(result.sitemap!.urlCount).toBe(3); // /, /about, /blog/post
+
+      const sitemapExists = await exists(result.sitemap!.outputPath);
+      expect(sitemapExists).toBe(true);
+
+      const content = await Deno.readTextFile(result.sitemap!.outputPath);
+      expect(content).toContain("https://example.com");
+      expect(content).not.toContain("_not-found");
+      expect(content).not.toContain("_error");
+    });
+
+    it("excludes custom routes from sitemap", async () => {
+      const result = await buildSite({
+        pagesDir: PAGES_DIR,
+        outDir: TEST_OUT_DIR,
+        sitemap: {
+          baseUrl: "https://example.com",
+          exclude: ["/blog/*"],
+        },
+      });
+
+      expect(result.sitemap!.urlCount).toBe(2); // /, /about
+
+      const content = await Deno.readTextFile(result.sitemap!.outputPath);
+      expect(content).not.toContain("/blog/");
+    });
+
+    it("returns undefined sitemap when not configured", async () => {
+      const result = await buildSite({
+        pagesDir: PAGES_DIR,
+        outDir: TEST_OUT_DIR,
+      });
+
+      expect(result.sitemap).toBeUndefined();
+    });
+  });
+
   describe("path validation", () => {
     it("rejects relative pagesDir", async () => {
       try {

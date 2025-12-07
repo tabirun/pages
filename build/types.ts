@@ -2,6 +2,23 @@ import type { ComponentType } from "preact";
 import type { DocumentProps } from "../renderer/types.ts";
 
 /**
+ * Options for sitemap generation.
+ */
+export interface SitemapOptions {
+  /**
+   * Base URL for the site (e.g., "https://example.com").
+   * Required for sitemap generation.
+   */
+  baseUrl: string;
+  /**
+   * Routes to exclude from sitemap (in addition to system pages).
+   * Supports exact matches and glob patterns.
+   * @example ["/admin", "/draft/*"]
+   */
+  exclude?: string[];
+}
+
+/**
  * Options for building the static site.
  */
 export interface BuildSiteOptions {
@@ -21,6 +38,11 @@ export interface BuildSiteOptions {
    * Uses DefaultDocument if not provided.
    */
   document?: ComponentType<DocumentProps>;
+  /**
+   * Sitemap generation options (optional).
+   * Only generates sitemap.xml if provided.
+   */
+  sitemap?: SitemapOptions;
 }
 
 /**
@@ -60,6 +82,16 @@ export interface BuildUnoCSSResult {
 }
 
 /**
+ * Result of sitemap generation.
+ */
+export interface BuildSitemapResult {
+  /** Absolute path to the generated sitemap.xml. */
+  outputPath: string;
+  /** Number of URLs included in sitemap. */
+  urlCount: number;
+}
+
+/**
  * Result of building the entire site.
  */
 export interface BuildSiteResult {
@@ -69,6 +101,8 @@ export interface BuildSiteResult {
   assets: BuildAssetResult[];
   /** UnoCSS compilation result, if uno.config.ts exists. */
   unoCSS?: BuildUnoCSSResult;
+  /** Sitemap generation result, if sitemap options provided. */
+  sitemap?: BuildSitemapResult;
   /** Total build duration in milliseconds. */
   durationMs: number;
 }

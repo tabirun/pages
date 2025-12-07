@@ -18,10 +18,12 @@ import { rewriteAssetUrls } from "./html-rewriter.ts";
 import {
   BuildError,
   type BuildPageResult,
+  type BuildSitemapResult,
   type BuildSiteOptions,
   type BuildSiteResult,
 } from "./types.ts";
 import { compileUnoCSS, injectStylesheet } from "../unocss/compiler.ts";
+import { generateSitemap } from "./sitemap.ts";
 
 /** Subdirectory for client bundles within output directory. */
 const BUNDLE_DIR = "__tabi";
@@ -49,7 +51,7 @@ export async function buildSite(
   options: BuildSiteOptions,
 ): Promise<BuildSiteResult> {
   const startTime = performance.now();
-  const { pagesDir, outDir, document } = options;
+  const { pagesDir, outDir, document, sitemap } = options;
 
   // Validate paths
   validatePaths(options);
@@ -149,10 +151,22 @@ export async function buildSite(
       await Deno.writeTextFile(page.htmlPath, html);
     }
 
+    // Generate sitemap if configured
+    let sitemapResult: BuildSitemapResult | undefined;
+    if (sitemap) {
+      const routes = results.map((page) => page.route);
+      sitemapResult = await generateSitemap({
+        routes,
+        config: sitemap,
+        outDir,
+      });
+    }
+
     return {
       pages: results,
       assets: hashedAssets,
       unoCSS: unoResult ? { publicPath: unoResult.publicPath } : undefined,
+      sitemap: sitemapResult,
       durationMs: Math.round(performance.now() - startTime),
     };
     // deno-coverage-ignore-start -- error handling: exceptions from underlying modules are already tested there
