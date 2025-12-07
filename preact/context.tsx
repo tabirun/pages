@@ -4,6 +4,7 @@ import { useContext } from "preact/hooks";
 import type { Frontmatter } from "./types.ts";
 
 const FrontmatterContext = createContext<Frontmatter | null>(null);
+const BasePathContext = createContext<string>("");
 
 /**
  * Props for the FrontmatterProvider component.
@@ -59,4 +60,55 @@ export function useFrontmatter(): Frontmatter {
     throw new Error("useFrontmatter must be used within FrontmatterProvider");
   }
   return ctx;
+}
+
+/**
+ * Props for the BasePathProvider component.
+ * @internal
+ */
+export interface BasePathProviderProps {
+  /** Base path prefix for the site (e.g., "/docs"). */
+  basePath: string;
+  /** Child components that can access basePath via useBasePath. */
+  children: ComponentChildren;
+}
+
+/**
+ * Provides basePath to descendant components.
+ *
+ * @internal This provider is automatically injected by the framework during
+ * page rendering. Users should not need to use this directly - use the
+ * `useBasePath` hook instead.
+ */
+export function BasePathProvider({
+  basePath,
+  children,
+}: BasePathProviderProps): JSX.Element {
+  return (
+    <BasePathContext.Provider value={basePath}>
+      {children}
+    </BasePathContext.Provider>
+  );
+}
+
+/**
+ * Hook to access the configured basePath from context.
+ *
+ * Returns the basePath configured in the pages config (e.g., "/docs").
+ * Returns empty string if no basePath is configured (site is at root).
+ *
+ * @returns The basePath string (empty string for root).
+ *
+ * @example
+ * ```tsx
+ * import { useBasePath } from "@tabirun/pages/preact";
+ *
+ * function Navigation() {
+ *   const basePath = useBasePath();
+ *   return <a href={`${basePath}/about`}>About</a>;
+ * }
+ * ```
+ */
+export function useBasePath(): string {
+  return useContext(BasePathContext);
 }

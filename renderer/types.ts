@@ -63,6 +63,8 @@ export interface RenderPageOptions {
   route: string;
   /** Custom document component (optional). Uses DefaultDocument if not provided. */
   document?: ComponentType<DocumentProps>;
+  /** Base path prefix for the site (e.g., "/docs"). Defaults to empty string. */
+  basePath?: string;
 }
 
 /**

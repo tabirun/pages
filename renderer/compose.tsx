@@ -1,30 +1,32 @@
 import type { ComponentType, JSX } from "preact";
 import type { LoadedLayout, LoadedPage } from "../loaders/types.ts";
-import { FrontmatterProvider } from "../preact/context.tsx";
+import { BasePathProvider, FrontmatterProvider } from "../preact/context.tsx";
 import { Markdown } from "../preact/markdown.tsx";
 
 /**
  * Composes a page with its layout chain into a renderable component tree.
  *
  * The composition wraps the page content in layouts from innermost to outermost,
- * then wraps everything in a FrontmatterProvider for context access.
+ * then wraps everything in context providers for frontmatter and basePath access.
  *
  * For markdown pages, the content is wrapped in a Markdown component which
  * renders a marker for post-processing by processMarkdownMarkers().
  *
  * @param page - Loaded page (markdown or TSX)
  * @param layouts - Layout chain from root to innermost
+ * @param basePath - Base path prefix for the site
  * @returns A component that renders the complete tree
  *
  * @example
  * ```typescript
- * const Tree = composeTree(page, [rootLayout, blogLayout]);
+ * const Tree = composeTree(page, [rootLayout, blogLayout], "/docs");
  * const html = render(<Tree />);
  * ```
  */
 export function composeTree(
   page: LoadedPage,
   layouts: LoadedLayout[],
+  basePath: string = "",
 ): ComponentType {
   // Build page content - either TSX component or markdown wrapped in Markdown
   let content: JSX.Element;
@@ -43,13 +45,15 @@ export function composeTree(
     content = <Layout>{content}</Layout>;
   }
 
-  // Return a component that wraps everything in FrontmatterProvider
+  // Return a component that wraps everything in context providers
   const frontmatter = page.frontmatter;
   return function ComposedTree(): JSX.Element {
     return (
-      <FrontmatterProvider frontmatter={frontmatter}>
-        {content}
-      </FrontmatterProvider>
+      <BasePathProvider basePath={basePath}>
+        <FrontmatterProvider frontmatter={frontmatter}>
+          {content}
+        </FrontmatterProvider>
+      </BasePathProvider>
     );
   };
 }

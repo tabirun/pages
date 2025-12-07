@@ -243,6 +243,7 @@ async function buildPage(options: BuildPageOptions): Promise<BuildPageResult> {
       clientBundlePath: bundleResult.publicPath,
       route,
       document,
+      basePath,
     });
 
     // Write HTML file
@@ -334,6 +335,7 @@ async function buildSystemPage(
       clientBundlePath: bundleResult.publicPath,
       route,
       document,
+      basePath,
     });
 
     // Write HTML file
