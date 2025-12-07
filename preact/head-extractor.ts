@@ -1,4 +1,4 @@
-import { unescapeHtml } from "../utils/html.ts";
+import { unescapeHtml } from "../utils/mod.ts";
 
 const HEAD_MARKER_REGEX = /<tabi-head>([\s\S]*?)<\/tabi-head>/g;
 

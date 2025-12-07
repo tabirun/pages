@@ -1,6 +1,6 @@
 import type { JSX } from "preact";
 import { useId } from "preact/hooks";
-import { escapeHtml } from "../utils/html.ts";
+import { escapeHtml } from "../utils/mod.ts";
 
 /**
  * Props for the internal Markdown component.
