@@ -1,4 +1,4 @@
-import { unescapeHtml } from "../utils/mod.ts";
+import { unescapeHtml } from "../utils/html.ts";
 import { renderMarkdown } from "./renderer.ts";
 
 const MARKER_REGEX = /<tabi-markdown>([\s\S]*?)<\/tabi-markdown>/g;

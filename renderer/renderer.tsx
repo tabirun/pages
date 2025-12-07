@@ -1,6 +1,6 @@
 import { render } from "preact-render-to-string";
-import { processMarkdownMarkers } from "../markdown/mod.ts";
-import { processHeadMarkers } from "../preact/mod.ts";
+import { processMarkdownMarkers } from "../markdown/extractor.ts";
+import { processHeadMarkers } from "../preact/head-extractor.ts";
 import { composeTree } from "./compose.tsx";
 import { DefaultDocument } from "./document.tsx";
 import { serializePageData } from "./serialize.ts";

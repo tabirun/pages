@@ -8,8 +8,8 @@ import type {
   LoadedLayout,
   LoadedMarkdownPage,
   LoadedTsxPage,
-} from "../../loaders/mod.ts";
-import { useFrontmatter } from "../../preact/mod.ts";
+} from "../../loaders/types.ts";
+import { useFrontmatter } from "../../preact/context.tsx";
 
 describe("composeTree", () => {
   describe("TSX pages with no layouts", () => {

@@ -1,7 +1,7 @@
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { serializePageData } from "../serialize.ts";
-import type { LoadedMarkdownPage, LoadedTsxPage } from "../../loaders/mod.ts";
+import type { LoadedMarkdownPage, LoadedTsxPage } from "../../loaders/types.ts";
 
 describe("serializePageData", () => {
   describe("markdown pages", () => {

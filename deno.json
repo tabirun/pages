@@ -22,7 +22,6 @@
   },
   "exports": {
     ".": "./pages/mod.ts",
-    "./bundler": "./bundler/mod.ts",
     "./preact": "./preact/mod.ts"
   },
   "tasks": {

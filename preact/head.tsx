@@ -1,7 +1,7 @@
 import type { ComponentChildren, JSX } from "preact";
 import { createElement } from "preact";
 import { render } from "preact-render-to-string";
-import { escapeHtml } from "../utils/mod.ts";
+import { escapeHtml } from "../utils/html.ts";
 
 /**
  * Props for the Head component.

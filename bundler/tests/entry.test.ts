@@ -5,9 +5,9 @@ import type {
   LoadedLayout,
   LoadedMarkdownPage,
   LoadedTsxPage,
-} from "../../loaders/mod.ts";
+} from "../../loaders/types.ts";
 
-const PREACT_MOD_PATH = "/project/preact/mod.ts";
+const PREACT_DIR = "/project/preact";
 
 describe("generateClientEntry", () => {
   describe("TSX pages", () => {
@@ -19,19 +19,19 @@ describe("generateClientEntry", () => {
         filePath: "/project/pages/dashboard.tsx",
       };
 
-      const result = generateClientEntry(page, [], PREACT_MOD_PATH);
+      const result = generateClientEntry(page, [], PREACT_DIR);
 
       // Check imports
       expect(result).toContain('import { hydrate } from "preact";');
       expect(result).toContain(
-        `import { FrontmatterProvider } from "${PREACT_MOD_PATH}";`,
+        `import { FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
       );
       expect(result).toContain(
         'import Page from "/project/pages/dashboard.tsx";',
       );
 
       // Should not import Markdown for TSX pages
-      expect(result).not.toContain("Markdown");
+      expect(result).not.toContain("markdown.tsx");
 
       // Check data reading
       expect(result).toContain(
@@ -71,7 +71,7 @@ describe("generateClientEntry", () => {
         },
       ];
 
-      const result = generateClientEntry(page, layouts, PREACT_MOD_PATH);
+      const result = generateClientEntry(page, layouts, PREACT_DIR);
 
       // Check layout import
       expect(result).toContain(
@@ -110,7 +110,7 @@ describe("generateClientEntry", () => {
         },
       ];
 
-      const result = generateClientEntry(page, layouts, PREACT_MOD_PATH);
+      const result = generateClientEntry(page, layouts, PREACT_DIR);
 
       // Check all layout imports
       expect(result).toContain(
@@ -150,12 +150,15 @@ describe("generateClientEntry", () => {
         filePath: "/project/pages/index.md",
       };
 
-      const result = generateClientEntry(page, [], PREACT_MOD_PATH);
+      const result = generateClientEntry(page, [], PREACT_DIR);
 
       // Check imports - should include Markdown
       expect(result).toContain('import { hydrate } from "preact";');
       expect(result).toContain(
-        `import { FrontmatterProvider, Markdown } from "${PREACT_MOD_PATH}";`,
+        `import { FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
+      );
+      expect(result).toContain(
+        `import { Markdown } from "${PREACT_DIR}/markdown.tsx";`,
       );
 
       // Should not import Page component
@@ -187,7 +190,7 @@ describe("generateClientEntry", () => {
         },
       ];
 
-      const result = generateClientEntry(page, layouts, PREACT_MOD_PATH);
+      const result = generateClientEntry(page, layouts, PREACT_DIR);
 
       // Check layout wraps Markdown
       expect(result).toContain("<Layout0>");
@@ -216,7 +219,7 @@ describe("generateClientEntry", () => {
         },
       ];
 
-      const result = generateClientEntry(page, layouts, PREACT_MOD_PATH);
+      const result = generateClientEntry(page, layouts, PREACT_DIR);
 
       // Check nesting
       const layout0Open = result.indexOf("<Layout0>");
@@ -249,7 +252,7 @@ describe("generateClientEntry", () => {
         },
       ];
 
-      const result = generateClientEntry(page, layouts, PREACT_MOD_PATH);
+      const result = generateClientEntry(page, layouts, PREACT_DIR);
 
       // Check proper JSX structure
       expect(result).toContain("function App() {");
@@ -283,7 +286,7 @@ describe("generateClientEntry", () => {
         },
       ];
 
-      const result = generateClientEntry(page, layouts, PREACT_MOD_PATH);
+      const result = generateClientEntry(page, layouts, PREACT_DIR);
 
       // All local imports should use absolute paths
       expect(result).toContain('import Page from "/project/pages/page.tsx"');
@@ -291,7 +294,7 @@ describe("generateClientEntry", () => {
         'import Layout0 from "/project/pages/_layout.tsx"',
       );
       expect(result).toContain(
-        `import { FrontmatterProvider } from "${PREACT_MOD_PATH}"`,
+        `import { FrontmatterProvider } from "${PREACT_DIR}/context.tsx"`,
       );
     });
 
@@ -303,7 +306,7 @@ describe("generateClientEntry", () => {
         filePath: "/project/pages/index.md",
       };
 
-      const result = generateClientEntry(page, [], PREACT_MOD_PATH);
+      const result = generateClientEntry(page, [], PREACT_DIR);
 
       expect(result.endsWith("\n")).toBe(true);
     });
@@ -318,7 +321,7 @@ describe("generateClientEntry", () => {
         filePath: "/project/pages/empty.tsx",
       };
 
-      const result = generateClientEntry(page, [], PREACT_MOD_PATH);
+      const result = generateClientEntry(page, [], PREACT_DIR);
 
       // Should still generate valid code
       expect(result).toContain("function App()");
@@ -343,7 +346,7 @@ describe("generateClientEntry", () => {
         },
       ];
 
-      const result = generateClientEntry(page, layouts, PREACT_MOD_PATH);
+      const result = generateClientEntry(page, layouts, PREACT_DIR);
 
       expect(result).toContain("api-reference.tsx");
     });
@@ -384,7 +387,7 @@ describe("generateClientEntry", () => {
         },
       ];
 
-      const result = generateClientEntry(page, layouts, PREACT_MOD_PATH);
+      const result = generateClientEntry(page, layouts, PREACT_DIR);
 
       // Should have all 5 layout imports
       expect(result).toContain("Layout0");
@@ -406,10 +409,13 @@ describe("generateClientEntry", () => {
         filePath: "/project/pages/index.md",
       };
 
-      const result = generateClientEntry(page, [], PREACT_MOD_PATH);
+      const result = generateClientEntry(page, [], PREACT_DIR);
 
       expect(result).toContain(
-        `import { FrontmatterProvider, Markdown } from "${PREACT_MOD_PATH}";`,
+        `import { FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
+      );
+      expect(result).toContain(
+        `import { Markdown } from "${PREACT_DIR}/markdown.tsx";`,
       );
       expect(result).toContain("<Markdown />");
     });
@@ -424,7 +430,7 @@ describe("generateClientEntry", () => {
         filePath: '/project/pages/test".tsx',
       };
 
-      const result = generateClientEntry(page, [], PREACT_MOD_PATH);
+      const result = generateClientEntry(page, [], PREACT_DIR);
 
       // Double quote should be escaped, not break out of string
       expect(result).toContain('test\\"');
@@ -439,7 +445,7 @@ describe("generateClientEntry", () => {
         filePath: "/project/pages/test\\.tsx",
       };
 
-      const result = generateClientEntry(page, [], PREACT_MOD_PATH);
+      const result = generateClientEntry(page, [], PREACT_DIR);
 
       // Backslash should be escaped
       expect(result).toContain("test\\\\");
@@ -453,7 +459,7 @@ describe("generateClientEntry", () => {
         filePath: "/project/pages/test\n.tsx",
       };
 
-      const result = generateClientEntry(page, [], PREACT_MOD_PATH);
+      const result = generateClientEntry(page, [], PREACT_DIR);
 
       // Newline should be escaped, not break the import statement
       expect(result).toContain("test\\n");
@@ -468,7 +474,7 @@ describe("generateClientEntry", () => {
         filePath: "/project/pages/test\r.tsx",
       };
 
-      const result = generateClientEntry(page, [], PREACT_MOD_PATH);
+      const result = generateClientEntry(page, [], PREACT_DIR);
 
       // CR should be escaped
       expect(result).toContain("test\\r");
@@ -482,7 +488,7 @@ describe("generateClientEntry", () => {
         filePath: "/project/pages/test\t.tsx",
       };
 
-      const result = generateClientEntry(page, [], PREACT_MOD_PATH);
+      const result = generateClientEntry(page, [], PREACT_DIR);
 
       // Tab should be escaped
       expect(result).toContain("test\\t");
@@ -504,7 +510,7 @@ describe("generateClientEntry", () => {
         },
       ];
 
-      const result = generateClientEntry(page, layouts, PREACT_MOD_PATH);
+      const result = generateClientEntry(page, layouts, PREACT_DIR);
 
       // Quote in layout path should be escaped
       expect(result).toContain('_layout\\"injected');
@@ -518,7 +524,7 @@ describe("generateClientEntry", () => {
         filePath: '/project/pages/test"; alert("xss");//.tsx',
       };
 
-      const result = generateClientEntry(page, [], PREACT_MOD_PATH);
+      const result = generateClientEntry(page, [], PREACT_DIR);
 
       // The alert should be part of the escaped string, not executable code
       expect(result).toContain('\\"');

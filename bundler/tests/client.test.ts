@@ -7,7 +7,7 @@ import type {
   LoadedLayout,
   LoadedMarkdownPage,
   LoadedTsxPage,
-} from "../../loaders/mod.ts";
+} from "../../loaders/types.ts";
 
 const FIXTURES_DIR = new URL("./fixtures/", import.meta.url).pathname;
 const PROJECT_ROOT = new URL("../..", import.meta.url).pathname;

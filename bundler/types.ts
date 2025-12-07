@@ -1,4 +1,4 @@
-import type { LoadedLayout, LoadedPage } from "../loaders/mod.ts";
+import type { LoadedLayout, LoadedPage } from "../loaders/types.ts";
 
 /**
  * Build mode for bundling.
