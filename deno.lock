@@ -118,7 +118,8 @@
       "integrity": "cfd41d2951aba24530c8225d16b47bc438626f5d0241b925a32f44b9d690d31f",
       "dependencies": [
         "jsr:@std/cache",
-        "jsr:@std/http"
+        "jsr:@std/http",
+        "jsr:@std/path@^1.0.8"
       ]
     }
   },
