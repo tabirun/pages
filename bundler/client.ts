@@ -33,7 +33,7 @@ import {
  *   mode: "development",
  *   projectRoot: "/project",
  * });
- * // result.publicPath = "/_tabi/blog/post.js"
+ * // result.publicPath = "/__tabi/blog/post.js"
  * ```
  */
 export async function bundleClient(
@@ -101,7 +101,7 @@ export async function bundleClient(
     await ensureDir(dirname(outputPath));
     await Deno.writeTextFile(outputPath, code);
 
-    const publicPath = `${basePath}/_tabi/${outputFileName}`;
+    const publicPath = `${basePath}/__tabi/${outputFileName}`;
 
     return {
       outputPath,
