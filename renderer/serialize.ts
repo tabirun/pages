@@ -1,5 +1,5 @@
-import type { LoadedPage } from "../loaders/types.ts";
-import { escapeHtml } from "../utils/html.ts";
+import type { LoadedPage } from "../loaders/mod.ts";
+import { escapeHtml } from "../utils/mod.ts";
 
 /**
  * Serialized page data for client hydration.

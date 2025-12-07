@@ -9,9 +9,8 @@ import type {
   LoadedLayout,
   LoadedMarkdownPage,
   LoadedTsxPage,
-} from "../../loaders/types.ts";
-import { Head } from "../../preact/head.tsx";
-import { useFrontmatter } from "../../preact/context.tsx";
+} from "../../loaders/mod.ts";
+import { Head, useFrontmatter } from "../../preact/mod.ts";
 
 describe("renderPage", () => {
   describe("TSX pages with no layouts", () => {

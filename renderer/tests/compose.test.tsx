@@ -4,12 +4,12 @@ import { render } from "preact-render-to-string";
 import type { ComponentType } from "preact";
 import { composeTree } from "../compose.tsx";
 import type {
+  LayoutProps,
   LoadedLayout,
   LoadedMarkdownPage,
   LoadedTsxPage,
-} from "../../loaders/types.ts";
-import { useFrontmatter } from "../../preact/context.tsx";
-import type { LayoutProps } from "../../loaders/types.ts";
+} from "../../loaders/mod.ts";
+import { useFrontmatter } from "../../preact/mod.ts";
 
 describe("composeTree", () => {
   describe("TSX pages with no layouts", () => {

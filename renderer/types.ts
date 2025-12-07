@@ -1,5 +1,5 @@
 import type { ComponentChildren, ComponentType } from "preact";
-import type { LoadedLayout, LoadedPage } from "../loaders/types.ts";
+import type { LoadedLayout, LoadedPage } from "../loaders/mod.ts";
 
 /**
  * Props for the document component.

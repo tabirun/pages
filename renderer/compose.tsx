@@ -1,7 +1,6 @@
 import type { ComponentType, JSX } from "preact";
-import type { LoadedLayout, LoadedPage } from "../loaders/types.ts";
-import { FrontmatterProvider } from "../preact/context.tsx";
-import { Markdown } from "../preact/markdown.tsx";
+import type { LoadedLayout, LoadedPage } from "../loaders/mod.ts";
+import { FrontmatterProvider, Markdown } from "../preact/mod.ts";
 
 /**
  * Composes a page with its layout chain into a renderable component tree.
