@@ -1,6 +1,5 @@
 import type { LoadedPage } from "../loaders/types.ts";
 import type { MarkdownCache } from "../preact/markdown-cache.tsx";
-import { escapeHtml } from "../utils/html.ts";
 
 /**
  * Serialized page data for client hydration.
@@ -19,14 +18,31 @@ export interface SerializedPageData {
 }
 
 /**
+ * Escapes JSON for safe embedding in a script tag.
+ *
+ * Script tags don't parse HTML entities, so we only need to prevent
+ * the JSON from breaking out of the script tag by escaping:
+ * - `</script>` sequences (replaced with `<\/script>`)
+ * - `<!--` sequences (could start HTML comments in some contexts)
+ *
+ * @param json - The JSON string to escape
+ * @returns JSON safe for embedding in a script tag
+ */
+function escapeJsonForScript(json: string): string {
+  return json
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e");
+}
+
+/**
  * Serializes page data into a script tag for client hydration.
  *
  * The data is embedded as JSON in a script tag with type="application/json",
  * which prevents execution while allowing the client to parse it.
  *
  * SECURITY:
- * - The JSON is HTML-escaped to prevent XSS from malicious frontmatter
- *   content (e.g., `</script>` in a string field would break out of the tag).
+ * - The JSON uses unicode escapes for `<` and `>` to prevent breaking out
+ *   of the script tag (e.g., `</script>` in a string field).
  * - The markdownCache values contain pre-rendered HTML that will be injected
  *   via `dangerouslySetInnerHTML` during hydration. This HTML comes from
  *   `renderMarkdown()` which allows raw HTML passthrough. Only use with
@@ -59,7 +75,7 @@ export function serializePageData(
   };
 
   const json = JSON.stringify(data);
-  const escaped = escapeHtml(json);
+  const escaped = escapeJsonForScript(json);
 
   return `<script id="__TABI_DATA__" type="application/json">${escaped}</script>`;
 }

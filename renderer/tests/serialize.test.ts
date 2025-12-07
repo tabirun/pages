@@ -179,10 +179,10 @@ describe("serializePageData", () => {
 
       const result = serializePageData(page, "/security", emptyCache());
 
-      // Verify </script> is escaped and cannot break out
+      // Verify </script> is escaped with unicode and cannot break out
       expect(result).not.toContain("</script><script>alert('xss')</script>");
-      expect(result).toContain("&lt;/script&gt;");
-      expect(result).toContain("&lt;script&gt;");
+      expect(result).toContain("\\u003c/script\\u003e");
+      expect(result).toContain("\\u003cscript\\u003e");
 
       // Verify it only closes once at the end
       const scriptTags = result.match(/<\/script>/g);
@@ -190,7 +190,7 @@ describe("serializePageData", () => {
       expect(scriptTags!.length).toBe(1);
     });
 
-    it("escapes HTML entities in frontmatter description", () => {
+    it("escapes angle brackets in frontmatter description", () => {
       const page: LoadedMarkdownPage = {
         type: "markdown",
         frontmatter: {
@@ -203,24 +203,15 @@ describe("serializePageData", () => {
 
       const result = serializePageData(page, "/html-chars", emptyCache());
 
-      // Verify HTML entities are escaped
-      expect(result).toContain("&amp;");
-      expect(result).toContain("&lt;");
-      expect(result).toContain("&gt;");
-      expect(result).toContain("&quot;");
+      // Verify angle brackets are escaped with unicode
+      expect(result).toContain("\\u003c");
+      expect(result).toContain("\\u003e");
 
-      // Extract and verify data is parseable
+      // Extract and verify data is parseable (JSON.parse handles unicode escapes)
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
       );
-      const escapedJson = jsonMatch![1];
-      const json = escapedJson
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
-
+      const json = jsonMatch![1];
       const data = JSON.parse(json);
 
       expect(data.frontmatter.title).toBe("HTML & Special Characters");
@@ -229,7 +220,7 @@ describe("serializePageData", () => {
       );
     });
 
-    it("escapes single quotes in frontmatter", () => {
+    it("preserves single quotes in frontmatter", () => {
       const page: LoadedMarkdownPage = {
         type: "markdown",
         frontmatter: {
@@ -242,26 +233,18 @@ describe("serializePageData", () => {
 
       const result = serializePageData(page, "/johns-post", emptyCache());
 
-      expect(result).toContain("&#39;");
-
+      // Single quotes don't need escaping in script tags
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
       );
-      const escapedJson = jsonMatch![1];
-      const json = escapedJson
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
-
+      const json = jsonMatch![1];
       const data = JSON.parse(json);
 
       expect(data.frontmatter.title).toBe("John's Blog Post");
       expect(data.frontmatter.description).toBe("It's a great article");
     });
 
-    it("escapes malicious JSON injection attempts", () => {
+    it("handles JSON injection attempts safely", () => {
       const page: LoadedMarkdownPage = {
         type: "markdown",
         frontmatter: {
@@ -274,21 +257,11 @@ describe("serializePageData", () => {
 
       const result = serializePageData(page, "/injection", emptyCache());
 
-      // Verify quotes are escaped
-      expect(result).toContain("&quot;");
-
-      // Extract and verify JSON is valid
+      // Extract and verify JSON is valid (JSON.stringify escapes quotes properly)
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
       );
-      const escapedJson = jsonMatch![1];
-      const json = escapedJson
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
-
+      const json = jsonMatch![1];
       const data = JSON.parse(json);
 
       // Verify the malicious content was escaped and treated as a value
@@ -643,22 +616,15 @@ describe("serializePageData", () => {
 
       const result = serializePageData(page, "/test", cache);
 
-      // Script tags should be escaped
+      // Script tags should be escaped with unicode
       expect(result).not.toContain('<script>alert("xss")</script>');
-      expect(result).toContain("&lt;script&gt;");
+      expect(result).toContain("\\u003cscript\\u003e");
 
-      // But data should be recoverable
+      // But data should be recoverable (JSON.parse handles unicode escapes)
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
       );
-      const escapedJson = jsonMatch![1];
-      const json = escapedJson
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
-
+      const json = jsonMatch![1];
       const data = JSON.parse(json);
 
       expect(data.markdownCache[":r0:"]).toBe('<script>alert("xss")</script>');
