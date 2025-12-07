@@ -1,7 +1,13 @@
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { serializePageData } from "../serialize.ts";
-import type { LoadedMarkdownPage, LoadedTsxPage } from "../../loaders/mod.ts";
+import type { LoadedMarkdownPage, LoadedTsxPage } from "../../loaders/types.ts";
+import type { MarkdownCache } from "../../preact/markdown-cache.tsx";
+
+/** Helper to create an empty markdown cache for tests */
+function emptyCache(): MarkdownCache {
+  return new Map();
+}
 
 describe("serializePageData", () => {
   describe("markdown pages", () => {
@@ -18,7 +24,11 @@ describe("serializePageData", () => {
         filePath: "/pages/blog/building-ssg.md",
       };
 
-      const result = serializePageData(page, "/blog/building-ssg");
+      const result = serializePageData(
+        page,
+        "/blog/building-ssg",
+        emptyCache(),
+      );
 
       // Verify script tag structure
       expect(result).toMatch(
@@ -61,7 +71,7 @@ describe("serializePageData", () => {
         filePath: "/pages/simple.md",
       };
 
-      const result = serializePageData(page, "/simple");
+      const result = serializePageData(page, "/simple", emptyCache());
 
       // Extract and parse JSON
       const jsonMatch = result.match(
@@ -93,7 +103,7 @@ describe("serializePageData", () => {
         filePath: "/pages/drafts/wip.md",
       };
 
-      const result = serializePageData(page, "/drafts/wip");
+      const result = serializePageData(page, "/drafts/wip", emptyCache());
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -124,7 +134,7 @@ describe("serializePageData", () => {
         filePath: "/pages/dashboard.tsx",
       };
 
-      const result = serializePageData(page, "/dashboard");
+      const result = serializePageData(page, "/dashboard", emptyCache());
 
       // Verify script tag structure
       expect(result).toMatch(
@@ -167,7 +177,7 @@ describe("serializePageData", () => {
         filePath: "/pages/security.md",
       };
 
-      const result = serializePageData(page, "/security");
+      const result = serializePageData(page, "/security", emptyCache());
 
       // Verify </script> is escaped and cannot break out
       expect(result).not.toContain("</script><script>alert('xss')</script>");
@@ -191,7 +201,7 @@ describe("serializePageData", () => {
         filePath: "/pages/html-chars.md",
       };
 
-      const result = serializePageData(page, "/html-chars");
+      const result = serializePageData(page, "/html-chars", emptyCache());
 
       // Verify HTML entities are escaped
       expect(result).toContain("&amp;");
@@ -230,7 +240,7 @@ describe("serializePageData", () => {
         filePath: "/pages/johns-post.md",
       };
 
-      const result = serializePageData(page, "/johns-post");
+      const result = serializePageData(page, "/johns-post", emptyCache());
 
       expect(result).toContain("&#39;");
 
@@ -262,7 +272,7 @@ describe("serializePageData", () => {
         filePath: "/pages/injection.md",
       };
 
-      const result = serializePageData(page, "/injection");
+      const result = serializePageData(page, "/injection", emptyCache());
 
       // Verify quotes are escaped
       expect(result).toContain("&quot;");
@@ -298,7 +308,7 @@ describe("serializePageData", () => {
         filePath: "/pages/test.md",
       };
 
-      const result = serializePageData(page, "/test");
+      const result = serializePageData(page, "/test", emptyCache());
 
       expect(result).toContain('id="__TABI_DATA__"');
     });
@@ -311,7 +321,7 @@ describe("serializePageData", () => {
         filePath: "/pages/test.md",
       };
 
-      const result = serializePageData(page, "/test");
+      const result = serializePageData(page, "/test", emptyCache());
 
       expect(result).toContain('type="application/json"');
     });
@@ -327,7 +337,7 @@ describe("serializePageData", () => {
         filePath: "/pages/test.md",
       };
 
-      const result = serializePageData(page, "/test");
+      const result = serializePageData(page, "/test", emptyCache());
 
       // Should not contain newlines
       expect(result).not.toContain("\n");
@@ -342,7 +352,11 @@ describe("serializePageData", () => {
         filePath: "/pages/blog/2024/article.md",
       };
 
-      const result = serializePageData(page, "/blog/2024/article");
+      const result = serializePageData(
+        page,
+        "/blog/2024/article",
+        emptyCache(),
+      );
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -368,7 +382,7 @@ describe("serializePageData", () => {
         filePath: "/pages/index.md",
       };
 
-      const result = serializePageData(page, "/");
+      const result = serializePageData(page, "/", emptyCache());
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -406,7 +420,7 @@ describe("serializePageData", () => {
         filePath: "/pages/advanced.md",
       };
 
-      const result = serializePageData(page, "/advanced");
+      const result = serializePageData(page, "/advanced", emptyCache());
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -437,7 +451,7 @@ describe("serializePageData", () => {
         filePath: "/pages/tech.md",
       };
 
-      const result = serializePageData(page, "/tech");
+      const result = serializePageData(page, "/tech", emptyCache());
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -469,7 +483,7 @@ describe("serializePageData", () => {
         filePath: "/pages/edge.md",
       };
 
-      const result = serializePageData(page, "/edge");
+      const result = serializePageData(page, "/edge", emptyCache());
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -502,7 +516,7 @@ describe("serializePageData", () => {
         filePath: "/pages/numbers.md",
       };
 
-      const result = serializePageData(page, "/numbers");
+      const result = serializePageData(page, "/numbers", emptyCache());
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -520,6 +534,134 @@ describe("serializePageData", () => {
       expect(data.frontmatter.readTime).toBe(5);
       expect(data.frontmatter.rating).toBe(4.5);
       expect(data.frontmatter.views).toBe(1000);
+    });
+  });
+
+  describe("markdown cache serialization", () => {
+    it("serializes empty markdown cache", () => {
+      const page: LoadedMarkdownPage = {
+        type: "markdown",
+        frontmatter: { title: "Test" },
+        content: "# Content",
+        filePath: "/pages/test.md",
+      };
+
+      const result = serializePageData(page, "/test", emptyCache());
+
+      const jsonMatch = result.match(
+        /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
+      );
+      const escapedJson = jsonMatch![1];
+      const json = escapedJson
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+
+      const data = JSON.parse(json);
+
+      expect(data.markdownCache).toEqual({});
+    });
+
+    it("serializes markdown cache with single entry", () => {
+      const page: LoadedMarkdownPage = {
+        type: "markdown",
+        frontmatter: { title: "Test" },
+        content: "# Content",
+        filePath: "/pages/test.md",
+      };
+
+      const cache: MarkdownCache = new Map([[":r0:", "<h1>Hello</h1>\n"]]);
+
+      const result = serializePageData(page, "/test", cache);
+
+      const jsonMatch = result.match(
+        /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
+      );
+      const escapedJson = jsonMatch![1];
+      const json = escapedJson
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+
+      const data = JSON.parse(json);
+
+      expect(data.markdownCache[":r0:"]).toBe("<h1>Hello</h1>\n");
+    });
+
+    it("serializes markdown cache with multiple entries", () => {
+      const page: LoadedMarkdownPage = {
+        type: "markdown",
+        frontmatter: { title: "Test" },
+        content: "# Content",
+        filePath: "/pages/test.md",
+      };
+
+      const cache: MarkdownCache = new Map([
+        [":r0:", "<h1>First</h1>\n"],
+        [":r1:", "<p>Second paragraph</p>\n"],
+        [":r2:", "<pre><code>const x = 1;</code></pre>"],
+      ]);
+
+      const result = serializePageData(page, "/test", cache);
+
+      const jsonMatch = result.match(
+        /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
+      );
+      const escapedJson = jsonMatch![1];
+      const json = escapedJson
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+
+      const data = JSON.parse(json);
+
+      expect(Object.keys(data.markdownCache).length).toBe(3);
+      expect(data.markdownCache[":r0:"]).toBe("<h1>First</h1>\n");
+      expect(data.markdownCache[":r1:"]).toBe("<p>Second paragraph</p>\n");
+      expect(data.markdownCache[":r2:"]).toBe(
+        "<pre><code>const x = 1;</code></pre>",
+      );
+    });
+
+    it("escapes HTML in markdown cache values", () => {
+      const page: LoadedMarkdownPage = {
+        type: "markdown",
+        frontmatter: { title: "Test" },
+        content: "# Content",
+        filePath: "/pages/test.md",
+      };
+
+      const cache: MarkdownCache = new Map([
+        [":r0:", '<script>alert("xss")</script>'],
+      ]);
+
+      const result = serializePageData(page, "/test", cache);
+
+      // Script tags should be escaped
+      expect(result).not.toContain('<script>alert("xss")</script>');
+      expect(result).toContain("&lt;script&gt;");
+
+      // But data should be recoverable
+      const jsonMatch = result.match(
+        /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
+      );
+      const escapedJson = jsonMatch![1];
+      const json = escapedJson
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+
+      const data = JSON.parse(json);
+
+      expect(data.markdownCache[":r0:"]).toBe('<script>alert("xss")</script>');
     });
   });
 });

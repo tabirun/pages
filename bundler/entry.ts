@@ -1,5 +1,5 @@
-import type { LoadedLayout, LoadedPage } from "../loaders/mod.ts";
-import { escapePathForJs } from "../utils/mod.ts";
+import type { LoadedLayout, LoadedPage } from "../loaders/types.ts";
+import { escapePathForJs } from "../utils/js.ts";
 
 /**
  * Generate client entry code for a page.
@@ -15,12 +15,12 @@ import { escapePathForJs } from "../utils/mod.ts";
  *
  * @param page - Loaded page (markdown or TSX)
  * @param layouts - Layout chain from root to innermost
- * @param preactModulePath - Absolute path to preact/mod.ts for imports
+ * @param preactDir - Absolute path to preact directory for imports
  * @returns Generated TypeScript/JSX entry code
  *
  * @example
  * ```typescript
- * const entryCode = generateClientEntry(page, layouts, "/project/preact/mod.ts");
+ * const entryCode = generateClientEntry(page, layouts, "/project/preact");
  * // Use entryCode as esbuild stdin content
  * ```
  *
@@ -29,25 +29,27 @@ import { escapePathForJs } from "../utils/mod.ts";
 export function generateClientEntry(
   page: LoadedPage,
   layouts: LoadedLayout[],
-  preactModulePath: string,
+  preactDir: string,
 ): string {
   const lines: string[] = [];
 
   // Import hydrate from Preact
   lines.push('import { hydrate } from "preact";');
 
-  // Import from framework preact module
+  // Import from framework preact modules (direct file imports)
+  lines.push(
+    `import { FrontmatterProvider } from "${
+      escapePathForJs(preactDir)
+    }/context.tsx";`,
+  );
+  lines.push(
+    `import { MarkdownCacheProvider } from "${
+      escapePathForJs(preactDir)
+    }/markdown-cache.tsx";`,
+  );
   if (page.type === "markdown") {
     lines.push(
-      `import { FrontmatterProvider, Markdown } from "${
-        escapePathForJs(preactModulePath)
-      }";`,
-    );
-  } else {
-    lines.push(
-      `import { FrontmatterProvider } from "${
-        escapePathForJs(preactModulePath)
-      }";`,
+      `import { Markdown } from "${escapePathForJs(preactDir)}/markdown.tsx";`,
     );
   }
 
@@ -78,6 +80,12 @@ export function generateClientEntry(
   const indent = "    ";
   let currentIndent = indent;
 
+  // Open MarkdownCacheProvider
+  lines.push(
+    `${currentIndent}<MarkdownCacheProvider initialData={data.markdownCache}>`,
+  );
+  currentIndent += "  ";
+
   // Open FrontmatterProvider
   lines.push(
     `${currentIndent}<FrontmatterProvider frontmatter={data.frontmatter}>`,
@@ -106,6 +114,10 @@ export function generateClientEntry(
   // Close FrontmatterProvider
   currentIndent = currentIndent.slice(0, -2);
   lines.push(`${currentIndent}</FrontmatterProvider>`);
+
+  // Close MarkdownCacheProvider
+  currentIndent = currentIndent.slice(0, -2);
+  lines.push(`${currentIndent}</MarkdownCacheProvider>`);
 
   lines.push("  );");
   lines.push("}");

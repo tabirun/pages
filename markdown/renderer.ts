@@ -1,5 +1,5 @@
 import { Marked } from "marked";
-import { escapeHtml } from "../utils/mod.ts";
+import { escapeHtml } from "../utils/html.ts";
 import { getConfiguredTheme, getHighlighter } from "./shiki.ts";
 
 /**

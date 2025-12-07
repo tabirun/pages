@@ -1,6 +1,6 @@
 import { render } from "preact-render-to-string";
-import { processMarkdownMarkers } from "../markdown/mod.ts";
-import { processHeadMarkers } from "../preact/mod.ts";
+import { processMarkdownMarkers } from "../markdown/extractor.ts";
+import { processHeadMarkers } from "../preact/head-extractor.ts";
 import { composeTree } from "./compose.tsx";
 import { DefaultDocument } from "./document.tsx";
 import { serializePageData } from "./serialize.ts";
@@ -48,8 +48,9 @@ export async function renderPage(
     // 2. Render the tree to an HTML string
     const rawHtml = render(<Tree />);
 
-    // 3. Process markdown markers (async - renders markdown to HTML)
-    const bodyAfterMarkdown = await processMarkdownMarkers(rawHtml);
+    // 3. Process markdown markers (async - renders markdown to HTML, builds cache)
+    const { html: bodyAfterMarkdown, cache: markdownCache } =
+      await processMarkdownMarkers(rawHtml);
 
     // 4. Extract head markers and get clean body
     const { head: headContent, html: bodyWithoutHead } = processHeadMarkers(
@@ -57,7 +58,7 @@ export async function renderPage(
     );
 
     // 5. Serialize page data for client hydration
-    const dataScript = serializePageData(page, route);
+    const dataScript = serializePageData(page, route, markdownCache);
     const bundleScript =
       `<script type="module" src="${clientBundlePath}"></script>`;
 

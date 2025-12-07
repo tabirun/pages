@@ -44,14 +44,14 @@ export async function bundleClient(
   // Validate paths
   validatePaths(options);
 
-  // Resolve preact module path for entry generation
-  const preactModulePath = join(
+  // Resolve preact directory path for entry generation
+  const preactDir = join(
     dirname(new URL(import.meta.url).pathname),
-    "../preact/mod.ts",
+    "../preact",
   );
 
   // Generate entry code
-  const entryCode = generateClientEntry(page, layouts, preactModulePath);
+  const entryCode = generateClientEntry(page, layouts, preactDir);
 
   // Determine base filename from route
   const routeFileName = routeToFileName(route);
