@@ -1,4 +1,7 @@
+import { resolve } from "@std/path";
 import type { TabiApp } from "@tabirun/app";
+import { buildSite } from "../build/builder.ts";
+import { registerStaticServer } from "../serve/server.ts";
 import { PagesConfigSchema } from "./config.ts";
 import type {
   BuildOptions,
@@ -42,21 +45,23 @@ const DEFAULT_OUT_DIR = "./dist";
 export function pages(config: PagesConfig = {}): PagesInstance {
   PagesConfigSchema.parse(config);
 
-  const dev = (_app: TabiApp, _options: DevOptions = {}): Promise<void> => {
-    const _pagesDir = _options.pagesDir ?? DEFAULT_PAGES_DIR;
+  function dev(_app: TabiApp, _options: DevOptions = {}): Promise<void> {
     throw new Error("Not implemented");
-  };
+  }
 
-  const build = (_options: BuildOptions = {}): Promise<void> => {
-    const _pagesDir = _options.pagesDir ?? DEFAULT_PAGES_DIR;
-    const _outDir = _options.outDir ?? DEFAULT_OUT_DIR;
-    throw new Error("Not implemented");
-  };
+  async function build(options: BuildOptions = {}): Promise<void> {
+    const pagesDir = resolve(options.pagesDir ?? DEFAULT_PAGES_DIR);
+    const outDir = resolve(options.outDir ?? DEFAULT_OUT_DIR);
+    const sitemap = config.siteMetadata
+      ? { baseUrl: config.siteMetadata.baseUrl }
+      : undefined;
+    await buildSite({ pagesDir, outDir, sitemap });
+  }
 
-  const serve = (_app: TabiApp, _options: ServeOptions = {}): void => {
-    const _dir = _options.dir ?? DEFAULT_OUT_DIR;
-    throw new Error("Not implemented");
-  };
+  function serve(app: TabiApp, options: ServeOptions = {}): void {
+    const rootDir = resolve(options.dir ?? DEFAULT_OUT_DIR);
+    registerStaticServer(app, { rootDir });
+  }
 
   return { dev, build, serve };
 }

@@ -25,6 +25,7 @@
     "jsr:@std/yaml@^1.0.10": "1.0.10",
     "jsr:@tabirun/app@0.1": "0.1.1",
     "npm:@types/node@*": "24.2.0",
+    "npm:@unocss/core@^65.4.3": "65.5.0",
     "npm:esbuild@0.24": "0.24.2",
     "npm:marked@15": "15.0.12",
     "npm:preact-render-to-string@^6.5.13": "6.6.3_preact@10.27.2",
@@ -117,7 +118,8 @@
       "integrity": "cfd41d2951aba24530c8225d16b47bc438626f5d0241b925a32f44b9d690d31f",
       "dependencies": [
         "jsr:@std/cache",
-        "jsr:@std/http"
+        "jsr:@std/http",
+        "jsr:@std/path@^1.0.8"
       ]
     }
   },
@@ -318,6 +320,9 @@
     },
     "@ungap/structured-clone@1.3.0": {
       "integrity": "sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g=="
+    },
+    "@unocss/core@65.5.0": {
+      "integrity": "sha512-XYWdS09M2XOjZNDotGhI2TIW/6duLNiyssopwjCbv4AlPklF0bZI86SKI55syYDBt6GRadoQbuvUkhSiTV/hzQ=="
     },
     "ccount@2.0.1": {
       "integrity": "sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg=="
@@ -572,6 +577,7 @@
       "jsr:@std/testing@^1.0.16",
       "jsr:@std/yaml@^1.0.10",
       "jsr:@tabirun/app@0.1",
+      "npm:@unocss/core@^65.4.3",
       "npm:esbuild@0.24",
       "npm:marked@15",
       "npm:preact-render-to-string@^6.5.13",
