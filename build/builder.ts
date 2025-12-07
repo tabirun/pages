@@ -21,6 +21,7 @@ import {
   type BuildSiteOptions,
   type BuildSiteResult,
 } from "./types.ts";
+import { compileUnoCSS, injectStylesheet } from "../unocss/compiler.ts";
 
 /** Subdirectory for client bundles within output directory. */
 const BUNDLE_DIR = "__tabi";
@@ -122,16 +123,36 @@ export async function buildSite(
     });
     const assetMap = createAssetMap(hashedAssets);
 
-    // Post-process HTML files to rewrite asset URLs
+    // Compile UnoCSS if config exists
+    let unoResult: { css: string; publicPath: string } | undefined;
+    if (manifest.systemFiles.unoConfig) {
+      const unoCompileResult = await compileUnoCSS({
+        configPath: manifest.systemFiles.unoConfig,
+        projectRoot: dirname(pagesDir),
+        outDir,
+      });
+      if (unoCompileResult.css) {
+        unoResult = {
+          css: unoCompileResult.css,
+          publicPath: unoCompileResult.publicPath,
+        };
+      }
+    }
+
+    // Post-process HTML files: rewrite asset URLs and inject UnoCSS
     for (const page of results) {
-      const html = await Deno.readTextFile(page.htmlPath);
-      const rewrittenHtml = rewriteAssetUrls(html, assetMap);
-      await Deno.writeTextFile(page.htmlPath, rewrittenHtml);
+      let html = await Deno.readTextFile(page.htmlPath);
+      html = rewriteAssetUrls(html, assetMap);
+      if (unoResult) {
+        html = injectStylesheet(html, unoResult.publicPath);
+      }
+      await Deno.writeTextFile(page.htmlPath, html);
     }
 
     return {
       pages: results,
       assets: hashedAssets,
+      unoCSS: unoResult ? { publicPath: unoResult.publicPath } : undefined,
       durationMs: Math.round(performance.now() - startTime),
     };
     // deno-coverage-ignore-start -- error handling: exceptions from underlying modules are already tested there

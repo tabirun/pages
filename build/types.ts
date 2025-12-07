@@ -52,6 +52,14 @@ export interface BuildAssetResult {
 }
 
 /**
+ * Result of UnoCSS compilation.
+ */
+export interface BuildUnoCSSResult {
+  /** Public URL path to the generated CSS file. */
+  publicPath: string;
+}
+
+/**
  * Result of building the entire site.
  */
 export interface BuildSiteResult {
@@ -59,6 +67,8 @@ export interface BuildSiteResult {
   pages: BuildPageResult[];
   /** Results for each asset copied (with hashes). */
   assets: BuildAssetResult[];
+  /** UnoCSS compilation result, if uno.config.ts exists. */
+  unoCSS?: BuildUnoCSSResult;
   /** Total build duration in milliseconds. */
   durationMs: number;
 }

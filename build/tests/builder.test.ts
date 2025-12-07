@@ -16,6 +16,13 @@ const FIXTURES_NO_LAYOUT_DIR = new URL(
 const PAGES_NO_LAYOUT_DIR = join(FIXTURES_NO_LAYOUT_DIR, "pages");
 const TEST_OUT_NO_LAYOUT_DIR = join(FIXTURES_NO_LAYOUT_DIR, ".dist-test");
 
+const FIXTURES_UNOCSS_DIR = new URL(
+  "./fixtures-unocss/",
+  import.meta.url,
+).pathname;
+const PAGES_UNOCSS_DIR = join(FIXTURES_UNOCSS_DIR, "pages");
+const TEST_OUT_UNOCSS_DIR = join(FIXTURES_UNOCSS_DIR, ".dist-test");
+
 describe("buildSite", () => {
   beforeAll(async () => {
     // Clean up any previous test output
@@ -26,6 +33,11 @@ describe("buildSite", () => {
     }
     try {
       await Deno.remove(TEST_OUT_NO_LAYOUT_DIR, { recursive: true });
+    } catch {
+      // Ignore if doesn't exist
+    }
+    try {
+      await Deno.remove(TEST_OUT_UNOCSS_DIR, { recursive: true });
     } catch {
       // Ignore if doesn't exist
     }
@@ -40,6 +52,11 @@ describe("buildSite", () => {
     }
     try {
       await Deno.remove(TEST_OUT_NO_LAYOUT_DIR, { recursive: true });
+    } catch {
+      // Ignore if doesn't exist
+    }
+    try {
+      await Deno.remove(TEST_OUT_UNOCSS_DIR, { recursive: true });
     } catch {
       // Ignore if doesn't exist
     }
@@ -322,6 +339,71 @@ describe("buildSite", () => {
       const errorPage = result.pages.find((p) => p.route === "/_error");
       const errorHtml = await Deno.readTextFile(errorPage!.htmlPath);
       expect(errorHtml).not.toContain("root-layout");
+    });
+  });
+
+  describe("UnoCSS integration", () => {
+    it("compiles UnoCSS when config exists", async () => {
+      const result = await buildSite({
+        pagesDir: PAGES_UNOCSS_DIR,
+        outDir: TEST_OUT_UNOCSS_DIR,
+      });
+
+      // Should have unoCSS result
+      expect(result.unoCSS).toBeDefined();
+      expect(result.unoCSS!.publicPath).toMatch(
+        /^\/__styles\/[A-F0-9]{8}\.css$/,
+      );
+    });
+
+    it("generates CSS file in __styles directory", async () => {
+      const result = await buildSite({
+        pagesDir: PAGES_UNOCSS_DIR,
+        outDir: TEST_OUT_UNOCSS_DIR,
+      });
+
+      // Extract filename from public path
+      const cssFilename = result.unoCSS!.publicPath.split("/").pop()!;
+      const cssPath = join(TEST_OUT_UNOCSS_DIR, "__styles", cssFilename);
+
+      // Verify CSS file exists
+      const cssExists = await exists(cssPath);
+      expect(cssExists).toBe(true);
+
+      // Verify CSS contains expected rules
+      const css = await Deno.readTextFile(cssPath);
+      expect(css).toContain("margin");
+      expect(css).toContain("padding");
+      expect(css).toContain("color");
+    });
+
+    it("injects stylesheet link into HTML", async () => {
+      const result = await buildSite({
+        pagesDir: PAGES_UNOCSS_DIR,
+        outDir: TEST_OUT_UNOCSS_DIR,
+      });
+
+      const indexPage = result.pages.find((p) => p.route === "/");
+      const html = await Deno.readTextFile(indexPage!.htmlPath);
+
+      // Should contain stylesheet link with hashed path
+      expect(html).toContain(
+        `<link rel="stylesheet" href="${result.unoCSS!.publicPath}">`,
+      );
+      // Link should be in head
+      expect(html).toMatch(
+        /<link rel="stylesheet" href="\/__styles\/[A-F0-9]{8}\.css">\n<\/head>/,
+      );
+    });
+
+    it("returns undefined unoCSS when no config exists", async () => {
+      const result = await buildSite({
+        pagesDir: PAGES_DIR,
+        outDir: TEST_OUT_DIR,
+      });
+
+      // fixtures/ directory has no uno.config.ts
+      expect(result.unoCSS).toBeUndefined();
     });
   });
 
