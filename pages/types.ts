@@ -8,9 +8,9 @@ import type { PagesConfigSchema, SiteMetadataSchema } from "./config.ts";
 export type SiteMetadata = z.infer<typeof SiteMetadataSchema>;
 
 /**
- * Configuration for the pages factory.
+ * Configuration for the pages factory (input type for users).
  */
-export type PagesConfig = z.infer<typeof PagesConfigSchema>;
+export type PagesConfig = z.input<typeof PagesConfigSchema>;
 
 /**
  * Options for the dev server.

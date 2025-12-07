@@ -24,6 +24,11 @@ const DEFAULT_OUT_DIR = "./dist";
  * // Minimal setup (no sitemap/robots.txt generation)
  * const { dev, build, serve } = pages();
  *
+ * // With base path (for hosting at a subpath like /docs)
+ * const { dev, build, serve } = pages({
+ *   basePath: "/docs",
+ * });
+ *
  * // With site metadata (enables sitemap.xml and robots.txt)
  * const { dev, build, serve } = pages({
  *   siteMetadata: { baseUrl: "https://example.com" },
@@ -43,7 +48,8 @@ const DEFAULT_OUT_DIR = "./dist";
  * @returns Pages instance with dev, build, and serve functions.
  */
 export function pages(config: PagesConfig = {}): PagesInstance {
-  PagesConfigSchema.parse(config);
+  const parsed = PagesConfigSchema.parse(config);
+  const basePath = parsed.basePath;
 
   function dev(_app: TabiApp, _options: DevOptions = {}): Promise<void> {
     throw new Error("Not implemented");
@@ -55,12 +61,12 @@ export function pages(config: PagesConfig = {}): PagesInstance {
     const sitemap = config.siteMetadata
       ? { baseUrl: config.siteMetadata.baseUrl }
       : undefined;
-    await buildSite({ pagesDir, outDir, sitemap });
+    await buildSite({ pagesDir, outDir, sitemap, basePath });
   }
 
   function serve(app: TabiApp, options: ServeOptions = {}): void {
     const rootDir = resolve(options.dir ?? DEFAULT_OUT_DIR);
-    registerStaticServer(app, { rootDir });
+    registerStaticServer(app, { rootDir, basePath });
   }
 
   return { dev, build, serve };

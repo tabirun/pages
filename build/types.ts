@@ -43,6 +43,12 @@ export interface BuildSiteOptions {
    * Only generates sitemap.xml if provided.
    */
   sitemap?: SitemapOptions;
+  /**
+   * Base path prefix for the site (optional).
+   * When set, all system-generated paths (bundles, stylesheets) will be prefixed.
+   * @example "/docs"
+   */
+  basePath?: string;
 }
 
 /**
