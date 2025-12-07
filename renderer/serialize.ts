@@ -1,4 +1,5 @@
 import type { LoadedPage } from "../loaders/types.ts";
+import type { MarkdownCache } from "../preact/markdown-cache.tsx";
 import { escapeHtml } from "../utils/html.ts";
 
 /**
@@ -11,6 +12,8 @@ export interface SerializedPageData {
   route: string;
   /** Page type discriminator. */
   pageType: "markdown" | "tsx";
+  /** Rendered markdown cache for hydration (id -> HTML). */
+  markdownCache: Record<string, string>;
 }
 
 /**
@@ -24,19 +27,25 @@ export interface SerializedPageData {
  *
  * @param page - Loaded page containing frontmatter and type
  * @param route - Route path for the page
+ * @param markdownCache - Rendered markdown cache from processMarkdownMarkers
  * @returns Complete script tag string ready for HTML embedding
  *
  * @example
  * ```typescript
- * const script = serializePageData(page, "/blog/post");
+ * const script = serializePageData(page, "/blog/post", markdownCache);
  * // Returns: <script id="__TABI_DATA__" type="application/json">{"frontmatter":...}</script>
  * ```
  */
-export function serializePageData(page: LoadedPage, route: string): string {
+export function serializePageData(
+  page: LoadedPage,
+  route: string,
+  markdownCache: MarkdownCache,
+): string {
   const data: SerializedPageData = {
     frontmatter: page.frontmatter,
     route,
     pageType: page.type,
+    markdownCache: Object.fromEntries(markdownCache),
   };
 
   const json = JSON.stringify(data);

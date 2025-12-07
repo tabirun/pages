@@ -49,8 +49,7 @@ export async function renderPage(
     const rawHtml = render(<Tree />);
 
     // 3. Process markdown markers (async - renders markdown to HTML, builds cache)
-    // TODO: Wire markdownCache to serialization for client hydration
-    const { html: bodyAfterMarkdown, cache: _markdownCache } =
+    const { html: bodyAfterMarkdown, cache: markdownCache } =
       await processMarkdownMarkers(rawHtml);
 
     // 4. Extract head markers and get clean body
@@ -59,7 +58,7 @@ export async function renderPage(
     );
 
     // 5. Serialize page data for client hydration
-    const dataScript = serializePageData(page, route);
+    const dataScript = serializePageData(page, route, markdownCache);
     const bundleScript =
       `<script type="module" src="${clientBundlePath}"></script>`;
 
