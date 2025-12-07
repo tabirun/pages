@@ -102,4 +102,54 @@ describe("registerStaticServer", () => {
       await res.body?.cancel();
     });
   });
+
+  describe("with basePath", () => {
+    let server: TabiTestServer;
+
+    beforeAll(() => {
+      server = new TabiTestServer();
+      registerStaticServer(server.app, {
+        rootDir: FIXTURES_DIR,
+        basePath: "/docs",
+      });
+      server.start();
+    });
+
+    afterAll(async () => {
+      await server.stop();
+    });
+
+    it("serves files at basePath", async () => {
+      const res = await fetch(server.url("/docs/"));
+      expect(res.status).toBe(200);
+      const text = await res.text();
+      expect(text).toContain("Welcome Home");
+    });
+
+    it("serves nested files at basePath", async () => {
+      const res = await fetch(server.url("/docs/about"));
+      expect(res.status).toBe(200);
+      const text = await res.text();
+      expect(text).toContain("About Us");
+    });
+
+    it("returns 404 for requests without basePath prefix", async () => {
+      const res = await fetch(server.url("/"));
+      expect(res.status).toBe(404);
+      await res.body?.cancel();
+    });
+
+    it("returns 404 for non-basePath routes", async () => {
+      const res = await fetch(server.url("/about"));
+      expect(res.status).toBe(404);
+      await res.body?.cancel();
+    });
+
+    it("returns custom 404 for non-existent paths under basePath", async () => {
+      const res = await fetch(server.url("/docs/does-not-exist"));
+      expect(res.status).toBe(404);
+      const text = await res.text();
+      expect(text).toContain("Page Not Found");
+    });
+  });
 });

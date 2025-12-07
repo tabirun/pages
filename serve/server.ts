@@ -7,7 +7,7 @@
  */
 
 import { join } from "@std/path";
-import type { TabiApp } from "@tabirun/app";
+import type { TabiApp, TabiContext } from "@tabirun/app";
 import { serveFiles } from "@tabirun/app/serve-files";
 import type { StaticServerOptions } from "./types.ts";
 
@@ -21,6 +21,10 @@ import type { StaticServerOptions } from "./types.ts";
  * - No building, watching, or rendering
  * - Production serving mode
  *
+ * When basePath is configured:
+ * - Only requests starting with basePath are served
+ * - Requests without basePath prefix return 404
+ *
  * Uses the serveFiles middleware for all file serving.
  *
  * @param app Tabi application instance
@@ -31,6 +35,7 @@ export function registerStaticServer(
   options: StaticServerOptions = {},
 ): void {
   const rootDir = options.rootDir ?? "./";
+  const basePath = options.basePath ?? "";
 
   // Pre-load _not-found.html at startup to avoid blocking on 404 errors
   const notFoundPath = join(rootDir, "_not-found.html");
@@ -41,18 +46,31 @@ export function registerStaticServer(
     // _not-found.html doesn't exist, will use default notFound
   }
 
+  // Helper to handle 404 responses
+  const handleNotFound = (c: TabiContext) => {
+    if (notFoundHtml) {
+      c.html(notFoundHtml, 404);
+    } else {
+      c.notFound();
+    }
+  };
+
+  // Route pattern includes basePath if configured
+  const routePattern = basePath ? `${basePath}/*` : "/*";
+
   app.get(
-    "/*",
+    routePattern,
     serveFiles({
       directory: rootDir,
       serveIndex: true,
-      onNotFound: (c) => {
-        if (notFoundHtml) {
-          c.html(notFoundHtml, 404);
-        } else {
-          c.notFound();
-        }
-      },
+      onNotFound: handleNotFound,
     }),
   );
+
+  // If basePath is set, requests without basePath prefix should 404
+  if (basePath) {
+    app.get("/*", (c) => {
+      handleNotFound(c);
+    });
+  }
 }
