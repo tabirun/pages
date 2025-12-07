@@ -1,5 +1,5 @@
 import { TabiApp } from "@tabirun/app";
-import { pages } from "../pages/mod.ts";
+import { pages } from "../../pages/mod.ts";
 
 const app = new TabiApp();
 
