@@ -1,5 +1,5 @@
 import { dirname, isAbsolute, join, resolve } from "@std/path";
-import { emptyDir, ensureDir } from "@std/fs";
+import { emptyDir, ensureDir, walk } from "@std/fs";
 import type { ComponentType } from "preact";
 import { bundleClient, stopEsbuild } from "../bundler/client.ts";
 import { loadLayout } from "../loaders/layout-loader.ts";
@@ -10,6 +10,7 @@ import type { DocumentProps } from "../renderer/types.ts";
 import { scanPages } from "../scanner/scanner.ts";
 import type { PageEntry } from "../scanner/types.ts";
 import { copyAssetsWithHashes, createAssetMap } from "./assets.ts";
+import { rewriteCssUrls } from "./css-rewriter.ts";
 import {
   createDefaultErrorPage,
   createDefaultNotFoundPage,
@@ -153,6 +154,17 @@ export async function buildSite(
         html = injectStylesheet(html, unoResult.publicPath);
       }
       await Deno.writeTextFile(page.htmlPath, html);
+    }
+
+    // Post-process CSS files: rewrite url() references
+    for await (const entry of walk(outDir, { exts: [".css"] })) {
+      if (entry.isFile) {
+        const css = await Deno.readTextFile(entry.path);
+        const rewritten = rewriteCssUrls(css, assetMap);
+        if (rewritten !== css) {
+          await Deno.writeTextFile(entry.path, rewritten);
+        }
+      }
     }
 
     // Generate sitemap if configured
