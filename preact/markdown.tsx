@@ -1,5 +1,6 @@
 import type { JSX } from "preact";
 import { useId } from "preact/hooks";
+import { useMarkdownCache } from "./markdown-cache.tsx";
 import { escapeHtml } from "../utils/html.ts";
 
 /**
@@ -17,14 +18,22 @@ export interface MarkdownProps {
  * On the server, renders a marker element containing escaped markdown content.
  * The marker is extracted and processed by `processMarkdownMarkers()` after SSR.
  *
- * On the client, preserves the processed HTML content during hydration by reading
- * the existing DOM content before Preact modifies it.
+ * On the client, reads pre-rendered HTML from the markdown cache context,
+ * which was populated from serialized page data during hydration.
  *
  * @internal Not part of public API
  */
 export function Markdown({ children = "" }: MarkdownProps): JSX.Element {
   const isServer = typeof window === "undefined";
   const id = useId();
+  const cache = useMarkdownCache();
+
+  // Server and client have different responsibilities:
+  // - Server: Output marker for post-processing (cache doesn't exist yet)
+  // - Client: Read from cache (populated from serialized page data)
+  //
+  // The cache is built AFTER server rendering by processMarkdownMarkers(),
+  // so we can't use the cache on the server - it hasn't been created yet.
 
   if (isServer) {
     const marker = `<tabi-markdown>${escapeHtml(children)}</tabi-markdown>`;
@@ -33,11 +42,7 @@ export function Markdown({ children = "" }: MarkdownProps): JSX.Element {
     );
   }
 
-  // Client: query DOM before Preact modifies it, read innerHTML
-  // TODO: This queries DOM on every re-render and breaks on unmount/remount.
-  // See docs/plans/markdown-hydration-cache.md for planned fix.
-  const existingEl = document.querySelector(`[data-tabi-md="${id}"]`);
-  const preservedHtml = existingEl?.innerHTML ?? "";
+  const preservedHtml = cache?.get(id) ?? "";
 
   return (
     <div

@@ -22,8 +22,13 @@ export interface SerializedPageData {
  * The data is embedded as JSON in a script tag with type="application/json",
  * which prevents execution while allowing the client to parse it.
  *
- * SECURITY: The JSON is HTML-escaped to prevent XSS from malicious frontmatter
- * content (e.g., `</script>` in a string field would break out of the tag).
+ * SECURITY:
+ * - The JSON is HTML-escaped to prevent XSS from malicious frontmatter
+ *   content (e.g., `</script>` in a string field would break out of the tag).
+ * - The markdownCache values contain pre-rendered HTML that will be injected
+ *   via `dangerouslySetInnerHTML` during hydration. This HTML comes from
+ *   `renderMarkdown()` which allows raw HTML passthrough. Only use with
+ *   trusted markdown content.
  *
  * @param page - Loaded page containing frontmatter and type
  * @param route - Route path for the page

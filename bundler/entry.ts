@@ -42,6 +42,11 @@ export function generateClientEntry(
       escapePathForJs(preactDir)
     }/context.tsx";`,
   );
+  lines.push(
+    `import { MarkdownCacheProvider } from "${
+      escapePathForJs(preactDir)
+    }/markdown-cache.tsx";`,
+  );
   if (page.type === "markdown") {
     lines.push(
       `import { Markdown } from "${escapePathForJs(preactDir)}/markdown.tsx";`,
@@ -75,6 +80,12 @@ export function generateClientEntry(
   const indent = "    ";
   let currentIndent = indent;
 
+  // Open MarkdownCacheProvider
+  lines.push(
+    `${currentIndent}<MarkdownCacheProvider initialData={data.markdownCache}>`,
+  );
+  currentIndent += "  ";
+
   // Open FrontmatterProvider
   lines.push(
     `${currentIndent}<FrontmatterProvider frontmatter={data.frontmatter}>`,
@@ -103,6 +114,10 @@ export function generateClientEntry(
   // Close FrontmatterProvider
   currentIndent = currentIndent.slice(0, -2);
   lines.push(`${currentIndent}</FrontmatterProvider>`);
+
+  // Close MarkdownCacheProvider
+  currentIndent = currentIndent.slice(0, -2);
+  lines.push(`${currentIndent}</MarkdownCacheProvider>`);
 
   lines.push("  );");
   lines.push("}");

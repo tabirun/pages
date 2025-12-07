@@ -27,11 +27,15 @@ describe("generateClientEntry", () => {
         `import { FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
       );
       expect(result).toContain(
+        `import { MarkdownCacheProvider } from "${PREACT_DIR}/markdown-cache.tsx";`,
+      );
+      expect(result).toContain(
         'import Page from "/project/pages/dashboard.tsx";',
       );
 
       // Should not import Markdown for TSX pages
-      expect(result).not.toContain("markdown.tsx");
+      expect(result).not.toContain("Markdown }");
+      expect(result).not.toContain("/markdown.tsx");
 
       // Check data reading
       expect(result).toContain(
@@ -44,10 +48,23 @@ describe("generateClientEntry", () => {
       // Check App component structure
       expect(result).toContain("function App()");
       expect(result).toContain(
+        "<MarkdownCacheProvider initialData={data.markdownCache}>",
+      );
+      expect(result).toContain(
         "<FrontmatterProvider frontmatter={data.frontmatter}>",
       );
       expect(result).toContain("<Page />");
       expect(result).toContain("</FrontmatterProvider>");
+      expect(result).toContain("</MarkdownCacheProvider>");
+
+      // Check nesting order: MarkdownCacheProvider wraps FrontmatterProvider
+      const cacheOpen = result.indexOf("<MarkdownCacheProvider");
+      const frontmatterOpen = result.indexOf("<FrontmatterProvider");
+      const frontmatterClose = result.indexOf("</FrontmatterProvider>");
+      const cacheClose = result.indexOf("</MarkdownCacheProvider>");
+
+      expect(cacheOpen).toBeLessThan(frontmatterOpen);
+      expect(frontmatterClose).toBeLessThan(cacheClose);
 
       // Check hydration
       expect(result).toContain(
@@ -152,10 +169,13 @@ describe("generateClientEntry", () => {
 
       const result = generateClientEntry(page, [], PREACT_DIR);
 
-      // Check imports - should include Markdown
+      // Check imports - should include Markdown and MarkdownCacheProvider
       expect(result).toContain('import { hydrate } from "preact";');
       expect(result).toContain(
         `import { FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
+      );
+      expect(result).toContain(
+        `import { MarkdownCacheProvider } from "${PREACT_DIR}/markdown-cache.tsx";`,
       );
       expect(result).toContain(
         `import { Markdown } from "${PREACT_DIR}/markdown.tsx";`,
@@ -164,9 +184,13 @@ describe("generateClientEntry", () => {
       // Should not import Page component
       expect(result).not.toContain("import Page from");
 
-      // Check App component uses Markdown
+      // Check App component uses Markdown with cache provider
+      expect(result).toContain(
+        "<MarkdownCacheProvider initialData={data.markdownCache}>",
+      );
       expect(result).toContain("<Markdown />");
       expect(result).not.toContain("<Page />");
+      expect(result).toContain("</MarkdownCacheProvider>");
 
       // Check hydration
       expect(result).toContain(
@@ -263,6 +287,8 @@ describe("generateClientEntry", () => {
       // Check opening tags have matching closing tags
       expect(result).toContain("<Layout0>");
       expect(result).toContain("</Layout0>");
+      expect(result).toContain("<MarkdownCacheProvider");
+      expect(result).toContain("</MarkdownCacheProvider>");
       expect(result).toContain("<FrontmatterProvider");
       expect(result).toContain("</FrontmatterProvider>");
 
@@ -295,6 +321,9 @@ describe("generateClientEntry", () => {
       );
       expect(result).toContain(
         `import { FrontmatterProvider } from "${PREACT_DIR}/context.tsx"`,
+      );
+      expect(result).toContain(
+        `import { MarkdownCacheProvider } from "${PREACT_DIR}/markdown-cache.tsx"`,
       );
     });
 
