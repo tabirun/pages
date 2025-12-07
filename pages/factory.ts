@@ -1,6 +1,7 @@
 import { resolve } from "@std/path";
 import type { TabiApp } from "@tabirun/app";
 import { buildSite } from "../build/builder.ts";
+import { registerStaticServer } from "../serve/server.ts";
 import { PagesConfigSchema } from "./config.ts";
 import type {
   BuildOptions,
@@ -57,8 +58,9 @@ export function pages(config: PagesConfig = {}): PagesInstance {
     await buildSite({ pagesDir, outDir, sitemap });
   }
 
-  function serve(_app: TabiApp, _options: ServeOptions = {}): void {
-    throw new Error("Not implemented");
+  function serve(app: TabiApp, options: ServeOptions = {}): void {
+    const rootDir = resolve(options.dir ?? DEFAULT_OUT_DIR);
+    registerStaticServer(app, { rootDir });
   }
 
   return { dev, build, serve };

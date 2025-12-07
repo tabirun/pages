@@ -168,20 +168,53 @@ describe("pages", () => {
   });
 
   describe("serve", () => {
-    it("should throw not implemented", () => {
+    const SERVE_FIXTURES_DIR = new URL(
+      "../../serve/tests/fixtures/",
+      import.meta.url,
+    ).pathname;
+
+    it("registers static server routes", () => {
       const { serve } = pages();
       const app = new TabiApp();
 
-      expect(() => serve(app)).toThrow("Not implemented");
+      // Should not throw
+      expect(() => serve(app, { dir: SERVE_FIXTURES_DIR })).not.toThrow();
     });
 
-    it("should throw not implemented with custom options", () => {
+    it("serves files from specified directory", async () => {
       const { serve } = pages();
-      const app = new TabiApp();
+      const { TabiTestServer } = await import("../../test-utils/server.ts");
+      const server = new TabiTestServer();
 
-      expect(() => serve(app, { dir: "./custom-dist" })).toThrow(
-        "Not implemented",
-      );
+      serve(server.app, { dir: SERVE_FIXTURES_DIR });
+      server.start();
+
+      try {
+        const res = await fetch(server.url("/"));
+        expect(res.status).toBe(200);
+        const text = await res.text();
+        expect(text).toContain("Welcome Home");
+      } finally {
+        await server.stop();
+      }
+    });
+
+    it("serves nested HTML files without extension", async () => {
+      const { serve } = pages();
+      const { TabiTestServer } = await import("../../test-utils/server.ts");
+      const server = new TabiTestServer();
+
+      serve(server.app, { dir: SERVE_FIXTURES_DIR });
+      server.start();
+
+      try {
+        const res = await fetch(server.url("/about"));
+        expect(res.status).toBe(200);
+        const text = await res.text();
+        expect(text).toContain("About Us");
+      } finally {
+        await server.stop();
+      }
     });
   });
 });
