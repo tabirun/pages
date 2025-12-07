@@ -48,8 +48,10 @@ export async function renderPage(
     // 2. Render the tree to an HTML string
     const rawHtml = render(<Tree />);
 
-    // 3. Process markdown markers (async - renders markdown to HTML)
-    const bodyAfterMarkdown = await processMarkdownMarkers(rawHtml);
+    // 3. Process markdown markers (async - renders markdown to HTML, builds cache)
+    // TODO: Wire markdownCache to serialization for client hydration
+    const { html: bodyAfterMarkdown, cache: _markdownCache } =
+      await processMarkdownMarkers(rawHtml);
 
     // 4. Extract head markers and get clean body
     const { head: headContent, html: bodyWithoutHead } = processHeadMarkers(
