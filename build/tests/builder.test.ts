@@ -135,7 +135,7 @@ describe("buildSite", () => {
 
       // Check public paths have hashes (production mode)
       for (const page of result.pages) {
-        expect(page.bundlePublicPath).toMatch(/\/_tabi\/.*-[A-Z0-9]+\.js/i);
+        expect(page.bundlePublicPath).toMatch(/\/__tabi\/.*-[A-Z0-9]+\.js/i);
       }
     });
 

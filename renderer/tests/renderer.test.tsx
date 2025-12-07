@@ -100,15 +100,15 @@ describe("renderPage", () => {
 
       expect(result.html).toContain('<script id="__TABI_DATA__"');
       expect(result.html).toContain('type="application/json"');
-      expect(result.html).toContain("&quot;frontmatter&quot;");
-      expect(result.html).toContain("&quot;title&quot;");
-      expect(result.html).toContain("&quot;Understanding TypeScript&quot;");
-      expect(result.html).toContain("&quot;author&quot;");
-      expect(result.html).toContain("&quot;Jane Smith&quot;");
-      expect(result.html).toContain("&quot;route&quot;");
-      expect(result.html).toContain("&quot;/blog/typescript&quot;");
-      expect(result.html).toContain("&quot;pageType&quot;");
-      expect(result.html).toContain("&quot;tsx&quot;");
+      expect(result.html).toContain('"frontmatter"');
+      expect(result.html).toContain('"title"');
+      expect(result.html).toContain('"Understanding TypeScript"');
+      expect(result.html).toContain('"author"');
+      expect(result.html).toContain('"Jane Smith"');
+      expect(result.html).toContain('"route"');
+      expect(result.html).toContain('"/blog/typescript"');
+      expect(result.html).toContain('"pageType"');
+      expect(result.html).toContain('"tsx"');
     });
 
     it("should include bundle script with correct path", async () => {
@@ -356,8 +356,8 @@ describe("renderPage", () => {
         route: "/markdown",
       });
 
-      expect(result.html).toContain("&quot;pageType&quot;");
-      expect(result.html).toContain("&quot;markdown&quot;");
+      expect(result.html).toContain('"pageType"');
+      expect(result.html).toContain('"markdown"');
     });
   });
 
@@ -826,7 +826,7 @@ describe("renderPage", () => {
 
       expect(result.html).toContain("<!DOCTYPE html>");
       expect(result.html).toContain("<div>Content</div>");
-      expect(result.html).toContain("&quot;frontmatter&quot;:{}");
+      expect(result.html).toContain('"frontmatter":{}');
     });
 
     it("should handle markdown with empty content", async () => {
@@ -870,9 +870,9 @@ describe("renderPage", () => {
       });
 
       expect(result.html).toContain("<!DOCTYPE html>");
-      // HTML escaping should prevent XSS
-      expect(result.html).toContain("&quot;");
-      expect(result.html).toContain("&lt;");
+      // Unicode escaping prevents XSS in script tags
+      expect(result.html).toContain("\\u003c");
+      expect(result.html).toContain("\\u003e");
     });
 
     it("should handle page component returning null", async () => {
@@ -918,7 +918,7 @@ describe("renderPage", () => {
       });
 
       expect(result.html).toContain(
-        "&quot;route&quot;:&quot;/blog/2024-12-07/hello-world&quot;",
+        '"route":"/blog/2024-12-07/hello-world"',
       );
     });
 

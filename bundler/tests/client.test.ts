@@ -45,7 +45,7 @@ describe("bundleClient", () => {
       // Check output paths
       expect(result.outputPath).toContain(".tabi-test");
       expect(result.outputPath).toContain("test.js");
-      expect(result.publicPath).toBe("/_tabi/test.js");
+      expect(result.publicPath).toBe("/__tabi/test.js");
       expect(result.hash).toBeUndefined();
 
       // Verify file exists
@@ -83,7 +83,7 @@ describe("bundleClient", () => {
         projectRoot: PROJECT_ROOT,
       });
 
-      expect(result.publicPath).toBe("/_tabi/with-layout.js");
+      expect(result.publicPath).toBe("/__tabi/with-layout.js");
 
       // Verify bundle contains expected code
       const content = await Deno.readTextFile(result.outputPath);
@@ -109,7 +109,7 @@ describe("bundleClient", () => {
         projectRoot: PROJECT_ROOT,
       });
 
-      expect(result.publicPath).toBe("/_tabi/markdown.js");
+      expect(result.publicPath).toBe("/__tabi/markdown.js");
 
       // Verify bundle contains expected code
       const content = await Deno.readTextFile(result.outputPath);
@@ -134,7 +134,7 @@ describe("bundleClient", () => {
         projectRoot: PROJECT_ROOT,
       });
 
-      expect(result.publicPath).toBe("/_tabi/index.js");
+      expect(result.publicPath).toBe("/__tabi/index.js");
       expect(result.outputPath).toContain("index.js");
     });
 
@@ -155,7 +155,7 @@ describe("bundleClient", () => {
         projectRoot: PROJECT_ROOT,
       });
 
-      expect(result.publicPath).toBe("/_tabi/blog/posts/article.js");
+      expect(result.publicPath).toBe("/__tabi/blog/posts/article.js");
     });
   });
 
@@ -182,7 +182,7 @@ describe("bundleClient", () => {
       expect(result.hash!.length).toBeGreaterThan(0);
 
       // Public path should contain hash
-      expect(result.publicPath).toMatch(/\/_tabi\/prod-[A-Z0-9]+\.js/i);
+      expect(result.publicPath).toMatch(/\/__tabi\/prod-[A-Z0-9]+\.js/i);
 
       // Verify minification (no sourcemap comment in production)
       const content = await Deno.readTextFile(result.outputPath);
@@ -333,7 +333,7 @@ describe("bundleClient", () => {
   });
 
   describe("basePath functionality", () => {
-    it("uses /_tabi/ prefix when basePath is not provided", async () => {
+    it("uses /__tabi/ prefix when basePath is not provided", async () => {
       const page: LoadedTsxPage = {
         type: "tsx",
         frontmatter: { title: "Test Page" },
@@ -350,7 +350,7 @@ describe("bundleClient", () => {
         projectRoot: PROJECT_ROOT,
       });
 
-      expect(result.publicPath).toBe("/_tabi/test.js");
+      expect(result.publicPath).toBe("/__tabi/test.js");
     });
 
     it("prefixes publicPath with /docs when basePath is /docs", async () => {
@@ -371,7 +371,7 @@ describe("bundleClient", () => {
         basePath: "/docs",
       });
 
-      expect(result.publicPath).toBe("/docs/_tabi/test.js");
+      expect(result.publicPath).toBe("/docs/__tabi/test.js");
     });
 
     it("prefixes publicPath with /my-app/v2 when basePath is /my-app/v2", async () => {
@@ -392,7 +392,7 @@ describe("bundleClient", () => {
         basePath: "/my-app/v2",
       });
 
-      expect(result.publicPath).toBe("/my-app/v2/_tabi/test.js");
+      expect(result.publicPath).toBe("/my-app/v2/__tabi/test.js");
     });
   });
 });

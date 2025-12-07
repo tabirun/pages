@@ -49,8 +49,8 @@ export interface BundleClientResult {
   outputPath: string;
   /**
    * URL path for script src (includes basePath if configured).
-   * Development: "/_tabi/blog/post.js" or "/docs/_tabi/blog/post.js"
-   * Production: "/_tabi/blog/post-a1b2c3.js" or "/docs/_tabi/blog/post-a1b2c3.js"
+   * Development: "/__tabi/blog/post.js" or "/docs/__tabi/blog/post.js"
+   * Production: "/__tabi/blog/post-a1b2c3.js" or "/docs/__tabi/blog/post-a1b2c3.js"
    */
   publicPath: string;
   /** Content hash for cache busting (production only). */
