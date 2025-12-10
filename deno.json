@@ -9,11 +9,17 @@
   },
   "publish": {
     "include": [
+      "build/",
       "bundler/",
       "cli/",
+      "loaders/",
       "markdown/",
       "pages/",
       "preact/",
+      "renderer/",
+      "scanner/",
+      "serve/",
+      "unocss/",
       "utils/",
       "deno.json",
       "README.md",
