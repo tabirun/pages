@@ -10,6 +10,7 @@
   "publish": {
     "include": [
       "bundler/",
+      "cli/",
       "markdown/",
       "pages/",
       "preact/",
@@ -22,7 +23,10 @@
   },
   "exports": {
     ".": "./pages/mod.ts",
-    "./preact": "./preact/mod.ts"
+    "./preact": "./preact/mod.ts",
+    "./build": "./cli/build.ts",
+    "./serve": "./cli/serve.ts",
+    "./dev": "./cli/dev.ts"
   },
   "tasks": {
     "test": "deno test --allow-all --clean --coverage=coverage && deno coverage coverage --exclude='.*/tests/fixtures/.*'",
