@@ -99,8 +99,10 @@ async function main(): Promise<void> {
   logger.success("Build complete!");
 }
 
+// deno-coverage-ignore-start: Entry point guard cannot be tested when module is imported
 if (import.meta.main) {
   main().catch(handleError);
 }
+// deno-coverage-ignore-end
 
 export { buildCommand, buildOptions, main };
