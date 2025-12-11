@@ -1,6 +1,6 @@
 {
   "name": "@tabirun/pages",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "nodeModulesDir": "auto",
   "compilerOptions": {
@@ -9,17 +9,10 @@
   },
   "publish": {
     "include": [
-      "build/",
       "bundler/",
-      "cli/",
-      "loaders/",
       "markdown/",
       "pages/",
       "preact/",
-      "renderer/",
-      "scanner/",
-      "serve/",
-      "unocss/",
       "utils/",
       "deno.json",
       "README.md",
@@ -29,10 +22,7 @@
   },
   "exports": {
     ".": "./pages/mod.ts",
-    "./preact": "./preact/mod.ts",
-    "./build": "./cli/build.ts",
-    "./serve": "./cli/serve.ts",
-    "./dev": "./cli/dev.ts"
+    "./preact": "./preact/mod.ts"
   },
   "tasks": {
     "test": "deno test --allow-all --clean --coverage=coverage && deno coverage coverage --exclude='.*/tests/fixtures/.*'",
