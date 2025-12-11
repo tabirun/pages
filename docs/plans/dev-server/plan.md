@@ -27,9 +27,9 @@ broadcasting.
 
 **Checklist**:
 
-- [ ] Dev
-- [ ] Review
-- [ ] Present
+- [x] Dev
+- [x] Review
+- [x] Present
 - [ ] Commit
 
 ---
