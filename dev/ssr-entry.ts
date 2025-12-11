@@ -119,8 +119,9 @@ function generateTsxEntry(
   lines.push(`${currentIndent}<BasePathProvider basePath="${basePath}">`);
   currentIndent += "  ";
 
-  // Open MarkdownCacheProvider (empty for TSX pages but needed for consistency)
-  lines.push(`${currentIndent}<MarkdownCacheProvider>`);
+  // Open MarkdownCacheProvider with empty initialData (required prop)
+  // Cache is empty during SSR - it's populated by processMarkdownMarkers() after render
+  lines.push(`${currentIndent}<MarkdownCacheProvider initialData={{}}>`);
   currentIndent += "  ";
 
   // Open FrontmatterProvider
@@ -264,8 +265,9 @@ function generateMarkdownEntry(
   lines.push(`${currentIndent}<BasePathProvider basePath="${basePath}">`);
   currentIndent += "  ";
 
-  // Open MarkdownCacheProvider
-  lines.push(`${currentIndent}<MarkdownCacheProvider>`);
+  // Open MarkdownCacheProvider with empty initialData (required prop)
+  // Cache is empty during SSR - it's populated by processMarkdownMarkers() after render
+  lines.push(`${currentIndent}<MarkdownCacheProvider initialData={{}}>`);
   currentIndent += "  ";
 
   // Open FrontmatterProvider

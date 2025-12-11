@@ -69,9 +69,9 @@ describe("generateSSREntry", () => {
       expect(entry).toContain('<BasePathProvider basePath="/docs">');
     });
 
-    it("should wrap in MarkdownCacheProvider", () => {
+    it("should wrap in MarkdownCacheProvider with empty initialData", () => {
       const entry = generateSSREntry({ page: tsxPage, layouts: [], preactDir });
-      expect(entry).toContain("<MarkdownCacheProvider>");
+      expect(entry).toContain("<MarkdownCacheProvider initialData={{}}>");
       expect(entry).toContain("</MarkdownCacheProvider>");
     });
 

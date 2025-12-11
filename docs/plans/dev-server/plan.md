@@ -76,8 +76,10 @@ provider hierarchy and layout chain. Must handle both page types differently:
 
 - [x] Dev
 - [x] Review
-- [ ] Present
-- [ ] Commit
+- [x] Present
+- [x] Commit
+
+**SHA:** 20b874e
 
 ---
 
@@ -94,8 +96,8 @@ per ADR-004).
 
 **Checklist**:
 
-- [ ] Dev
-- [ ] Review
+- [x] Dev
+- [x] Review
 - [ ] Present
 - [ ] Commit
 
