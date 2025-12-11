@@ -30,7 +30,9 @@ broadcasting.
 - [x] Dev
 - [x] Review
 - [x] Present
-- [ ] Commit
+- [x] Commit
+
+**SHA:** f1f1496
 
 ---
 
@@ -47,9 +49,9 @@ handling.
 
 **Checklist**:
 
-- [ ] Dev
-- [ ] Review
-- [ ] Present
+- [x] Dev
+- [x] Review
+- [x] Present
 - [ ] Commit
 
 ---
