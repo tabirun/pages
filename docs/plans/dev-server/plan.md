@@ -52,7 +52,9 @@ handling.
 - [x] Dev
 - [x] Review
 - [x] Present
-- [ ] Commit
+- [x] Commit
+
+**SHA:** a7de0d6
 
 ---
 
@@ -72,8 +74,8 @@ provider hierarchy and layout chain. Must handle both page types differently:
 
 **Checklist**:
 
-- [ ] Dev
-- [ ] Review
+- [x] Dev
+- [x] Review
 - [ ] Present
 - [ ] Commit
 

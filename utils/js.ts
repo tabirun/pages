@@ -13,5 +13,7 @@ export function escapePathForJs(path: string): string {
     .replace(/"/g, '\\"') // Escape double quotes
     .replace(/\n/g, "\\n") // Escape newlines
     .replace(/\r/g, "\\r") // Escape carriage returns
-    .replace(/\t/g, "\\t"); // Escape tabs
+    .replace(/\t/g, "\\t") // Escape tabs
+    .replace(/\u2028/g, "\\u2028") // Escape Line Separator (JS line terminator)
+    .replace(/\u2029/g, "\\u2029"); // Escape Paragraph Separator (JS line terminator)
 }
