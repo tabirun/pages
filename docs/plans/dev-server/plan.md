@@ -98,8 +98,10 @@ per ADR-004).
 
 - [x] Dev
 - [x] Review
-- [ ] Present
-- [ ] Commit
+- [x] Present
+- [x] Commit
+
+**SHA:** c280859
 
 ---
 
@@ -117,10 +119,12 @@ recovery.
 
 **Checklist**:
 
-- [ ] Dev
-- [ ] Review
-- [ ] Present
-- [ ] Commit
+- [x] Dev
+- [x] Review
+- [x] Present
+- [x] Commit
+
+**SHA:** 1215446
 
 ---
 
