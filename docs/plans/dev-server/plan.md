@@ -20,8 +20,8 @@ broadcasting.
 
 **Files**:
 
-- Create `dev/types.ts` - DevServerOptions, DevServerState, HotReloadMessage
-  interfaces
+- Create `dev/types.ts` - DevServerOptions, DevServerState, HotReloadMessage,
+  SSROptions, SSRResult interfaces
 - Create `dev/hot-reload.ts` - WebSocket server implementation
 - Create `dev/tests/hot-reload.test.ts` - Unit tests
 
@@ -58,12 +58,15 @@ handling.
 
 **Goal**: Implement the SSR entry code generator that creates TypeScript/TSX
 code strings for both TSX pages and Markdown pages, wrapping them in the proper
-provider hierarchy and layout chain.
+provider hierarchy and layout chain. Must handle both page types differently:
+
+- **TSX pages**: Import component, export frontmatter
+- **Markdown pages**: Read content at bundle time, wrap in Markdown component
 
 **Files**:
 
-- Create `dev/ssr-entry.ts` - generateSSREntry() function
-- Create `dev/tests/ssr-entry.test.ts` - Unit tests
+- Create `dev/ssr-entry.ts` - generateSSREntry() function for both page types
+- Create `dev/tests/ssr-entry.test.ts` - Unit tests for TSX and markdown
 
 **Checklist**:
 
@@ -83,7 +86,6 @@ per ADR-004).
 **Files**:
 
 - Create `dev/ssr-bundler.ts` - bundleSSR() function with data URL import
-- Modify `dev/types.ts` - Add SSROptions, SSRResult interfaces
 - Create `dev/tests/ssr-bundler.test.ts` - Unit tests
 
 **Checklist**:
@@ -103,7 +105,8 @@ recovery.
 
 **Files**:
 
-- Create `dev/error-overlay.tsx` - renderErrorOverlay() function
+- Create `dev/error-overlay.ts` - renderErrorOverlay() function (plain TS, no
+  JSX needed for string generation)
 - Create `dev/tests/error-overlay.test.ts` - Unit tests
 
 **Checklist**:
@@ -123,9 +126,8 @@ reload injection.
 
 **Files**:
 
-- Create `dev/handlers.ts` - handlePageRequest(), handleBundleRequest(),
-  handleStylesRequest()
-- Modify `dev/types.ts` - Add handler-related types if needed
+- Create `dev/handlers.ts` - handlePageRequest(), handleNotFound(),
+  handleError()
 - Create `dev/tests/handlers.test.ts` - Unit tests
 
 **Checklist**:
@@ -141,7 +143,7 @@ reload injection.
 
 **Goal**: Implement the main dev server registration function that initializes
 state, registers all routes, and sets up file watching with manifest
-invalidation logic.
+invalidation logic. Returns cleanup function for graceful shutdown.
 
 **Files**:
 
@@ -178,7 +180,8 @@ registerDevServer function.
 ### Commit 9: feat(dev): wire dev server into pages factory
 
 **Goal**: Integrate the dev server into the pages() factory function, replacing
-the stub implementation with the full dev server registration.
+the stub implementation with the full dev server registration. Store cleanup
+handle for potential graceful shutdown.
 
 **Files**:
 
@@ -233,20 +236,104 @@ const module = await import(dataUrl);
 
 ### Route Registration Order
 
-Routes must be registered specific-to-general:
+Routes must be registered specific-to-general (basePath-aware):
 
-1. `/__hot-reload` - WebSocket upgrade
-2. `/__dev-bundles/*` - Client bundles
-3. `/__dev-styles/uno.css` - UnoCSS
-4. `/public/*` - Public assets
-5. `/*` - Page handler (catch-all)
+1. `{basePath}/__hot-reload` - WebSocket upgrade
+2. `{basePath}/__tabi/*` - Client bundles (matches production path)
+3. `{basePath}/__styles/uno.css` - UnoCSS
+4. `{basePath}/public/*` - Public assets (direct from source)
+5. `{basePath}/*` - Page handler (catch-all)
+
+### SSR Entry Generation by Page Type
+
+**TSX Pages**:
+
+```typescript
+import { render } from "preact-render-to-string";
+import { BasePathProvider, FrontmatterProvider } from "{preactDir}/context.tsx";
+import Layout0 from "{layoutPath}";
+import Page, { frontmatter } from "{pagePath}";
+
+function App() {
+  return (
+    <BasePathProvider basePath="{basePath}">
+      <FrontmatterProvider frontmatter={frontmatter ?? {}}>
+        <Layout0>
+          <Page />
+        </Layout0>
+      </FrontmatterProvider>
+    </BasePathProvider>
+  );
+}
+
+export const html = render(<App />);
+export const pageType = "tsx";
+export { frontmatter };
+```
+
+**Markdown Pages**:
+
+```typescript
+import { render } from "preact-render-to-string";
+import { BasePathProvider, FrontmatterProvider } from "{preactDir}/context.tsx";
+import { Markdown } from "{preactDir}/markdown.tsx";
+import Layout0 from "{layoutPath}";
+
+const frontmatter = { frontmatterJson };
+const content = `{markdownContent}`;
+
+function App() {
+  return (
+    <BasePathProvider basePath="{basePath}">
+      <FrontmatterProvider frontmatter={frontmatter}>
+        <Layout0>
+          <Markdown>{content}</Markdown>
+        </Layout0>
+      </FrontmatterProvider>
+    </BasePathProvider>
+  );
+}
+
+export const html = render(<App />);
+export const pageType = "markdown";
+export { content, frontmatter };
+```
+
+### Manifest Invalidation Strategy
+
+**Invalidate manifest** (force rescan) on:
+
+- Layout changes (affects layout chains)
+- System file changes (_html, _not-found, _error)
+- Code changes outside pages/ (could affect any importer)
+- Page create/delete (structural change)
+
+**Don't invalidate** on:
+
+- Single page content update (only affects that page)
+- Public asset changes (no impact on manifest)
+- UnoCSS config changes (rebuild CSS, don't rescan)
 
 ### Design Decisions
 
 - **No caching**: Keep it simple initially, optimize later if needed
 - **Full page reload**: No HMR, just reload on any change
-- **In-memory bundles**: Don't write to disk in dev mode
+- **In-memory SSR bundles**: Via data URL import, never written to disk
+- **Client bundles to .tabi/**: Written for esbuild to resolve, cleaned on start
 - **Fail gracefully**: All errors show overlay with hot reload for auto-recovery
+- **Cleanup function**: registerDevServer returns () => void for shutdown
+
+### Post-Processing Pipeline (reuse from renderer)
+
+After SSR bundle returns HTML:
+
+1. `processMarkdownMarkers()` - Render markdown to HTML, build cache
+2. `processHeadMarkers()` - Extract `<Head>` content
+3. `serializePageData()` - Create `__TABI_DATA__` script
+4. Inject client bundle script
+5. Inject hot reload script
+6. Inject UnoCSS link (if config exists)
+7. Assemble document with DefaultDocument
 
 ## Out of Scope
 
