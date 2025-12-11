@@ -1,5 +1,24 @@
 /**
- * Public Preact components and hooks for Tabirun pages.
+ * Preact components and hooks for Tabirun Pages.
+ *
+ * @module
+ *
+ * @example
+ * ```tsx
+ * import { Head, useFrontmatter } from "@tabirun/pages/preact";
+ *
+ * export default function Page() {
+ *   const frontmatter = useFrontmatter();
+ *   return (
+ *     <>
+ *       <Head>
+ *         <title>{frontmatter.title}</title>
+ *       </Head>
+ *       <h1>{frontmatter.title}</h1>
+ *     </>
+ *   );
+ * }
+ * ```
  */
 
 export { Code } from "./code.tsx";
