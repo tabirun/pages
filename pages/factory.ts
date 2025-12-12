@@ -1,6 +1,7 @@
-import { resolve } from "@std/path";
+import { basename, dirname, resolve } from "@std/path";
 import type { TabiApp } from "@tabirun/app";
 import { buildSite } from "../build/builder.ts";
+import { registerDevServer } from "../dev/mod.ts";
 import { registerStaticServer } from "../serve/server.ts";
 import { PagesConfigSchema } from "./config.ts";
 import type {
@@ -51,8 +52,16 @@ export function pages(config: PagesConfig = {}): PagesInstance {
   const parsed = PagesConfigSchema.parse(config);
   const basePath = parsed.basePath;
 
-  function dev(_app: TabiApp, _options: DevOptions = {}): Promise<void> {
-    throw new Error("Not implemented");
+  async function dev(app: TabiApp, options: DevOptions = {}): Promise<void> {
+    const resolvedPagesDir = resolve(options.pagesDir ?? DEFAULT_PAGES_DIR);
+    const rootDir = dirname(resolvedPagesDir);
+    const pagesDir = basename(resolvedPagesDir);
+
+    await registerDevServer(app, {
+      rootDir,
+      pagesDir,
+      basePath,
+    });
   }
 
   async function build(options: BuildOptions = {}): Promise<void> {

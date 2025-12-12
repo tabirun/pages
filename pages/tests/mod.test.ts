@@ -6,7 +6,7 @@ import { TabiApp } from "@tabirun/app";
 import { pages } from "../mod.ts";
 import { PagesConfigSchema } from "../config.ts";
 
-describe("pages", () => {
+describe("pages", { sanitizeResources: false, sanitizeOps: false }, () => {
   describe("factory", () => {
     it("should return dev, build, and serve functions", () => {
       const instance = pages();
@@ -112,20 +112,55 @@ describe("pages", () => {
   });
 
   describe("dev", () => {
-    it("should throw not implemented", () => {
+    const FIXTURES_DIR = new URL("./fixtures/", import.meta.url).pathname;
+    const PAGES_DIR = join(FIXTURES_DIR, "pages");
+
+    it("should register dev server routes", async () => {
       const { dev } = pages();
       const app = new TabiApp();
 
-      expect(() => dev(app)).toThrow("Not implemented");
+      await dev(app, { pagesDir: PAGES_DIR });
+
+      // Server should be registered - make a request to verify
+      const server = Deno.serve({ port: 0 }, app.handler);
+      const addr = server.addr as Deno.NetAddr;
+
+      try {
+        const response = await fetch(`http://localhost:${addr.port}/`);
+        expect(response.status).toBe(200);
+        const html = await response.text();
+        expect(html).toContain("__tabi__");
+        expect(html).toContain("__hot-reload");
+      } finally {
+        server.shutdown();
+        await server.finished;
+      }
     });
 
-    it("should throw not implemented with custom options", () => {
+    it("should register hot reload endpoint", async () => {
       const { dev } = pages();
       const app = new TabiApp();
 
-      expect(() => dev(app, { pagesDir: "./custom-pages" })).toThrow(
-        "Not implemented",
-      );
+      await dev(app, { pagesDir: PAGES_DIR });
+
+      const server = Deno.serve({ port: 0 }, app.handler);
+      const addr = server.addr as Deno.NetAddr;
+
+      try {
+        const ws = new WebSocket(
+          `ws://localhost:${addr.port}/__hot-reload`,
+        );
+        const connected = await new Promise<boolean>((resolve) => {
+          ws.onopen = () => resolve(true);
+          ws.onerror = () => resolve(false);
+          setTimeout(() => resolve(false), 1000);
+        });
+        expect(connected).toBe(true);
+        ws.close();
+      } finally {
+        server.shutdown();
+        await server.finished;
+      }
     });
   });
 
