@@ -15,6 +15,7 @@ import { bundleSSR } from "./ssr-bundler.ts";
 import { renderErrorOverlay } from "./error-overlay.ts";
 import { generateHotReloadScript } from "./client-script.ts";
 import type { DevServerState } from "./types.ts";
+import type { ContentfulStatus } from "@tabirun/app/status";
 
 /** Path to framework's default pages directory. */
 const DEFAULTS_DIR = join(
@@ -29,7 +30,7 @@ export interface PageRequestResult {
   /** Complete HTML document with hot reload script. */
   html: string;
   /** HTTP status code. */
-  status: number;
+  status: ContentfulStatus;
 }
 
 /**

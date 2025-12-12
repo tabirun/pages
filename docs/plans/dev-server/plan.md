@@ -164,10 +164,12 @@ invalidation logic. Returns cleanup function for graceful shutdown.
 
 **Checklist**:
 
-- [ ] Dev
-- [ ] Review
-- [ ] Present
-- [ ] Commit
+- [x] Dev
+- [x] Review
+- [x] Present
+- [x] Commit
+
+**SHA:** 7737aa6
 
 ---
 
