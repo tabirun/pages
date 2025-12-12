@@ -96,11 +96,13 @@ function generateTsxEntry(
     );
   }
 
-  // Import page with frontmatter
+  // Import page module (frontmatter export is optional)
   lines.push(
-    `import Page, { frontmatter as pageFrontmatter } from "${
-      escapePathForJs(page.filePath)
-    }";`,
+    `import * as PageModule from "${escapePathForJs(page.filePath)}";`,
+  );
+  lines.push("const Page = PageModule.default;");
+  lines.push(
+    'const pageFrontmatter = "frontmatter" in PageModule ? PageModule.frontmatter : {};',
   );
 
   lines.push("");

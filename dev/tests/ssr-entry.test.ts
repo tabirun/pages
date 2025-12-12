@@ -36,10 +36,14 @@ describe("generateSSREntry", () => {
       );
     });
 
-    it("should import Page component with frontmatter", () => {
+    it("should import Page module and extract component and frontmatter", () => {
       const entry = generateSSREntry({ page: tsxPage, layouts: [], preactDir });
       expect(entry).toContain(
-        'import Page, { frontmatter as pageFrontmatter } from "/project/pages/about.tsx"',
+        'import * as PageModule from "/project/pages/about.tsx"',
+      );
+      expect(entry).toContain("const Page = PageModule.default;");
+      expect(entry).toContain(
+        'const pageFrontmatter = "frontmatter" in PageModule ? PageModule.frontmatter : {};',
       );
     });
 
@@ -292,7 +296,7 @@ describe("generateSSREntry", () => {
 
       // The import statement should remain on one line (no unescaped line breaks)
       const importLines = entry.split("\n").filter((line) =>
-        line.includes("import Page")
+        line.includes("import * as PageModule")
       );
       expect(importLines).toHaveLength(1);
 
