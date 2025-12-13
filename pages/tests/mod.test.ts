@@ -112,20 +112,21 @@ describe("pages", () => {
   });
 
   describe("dev", () => {
-    it("should throw not implemented", () => {
+    const FIXTURES_DIR = new URL("./fixtures/", import.meta.url).pathname;
+    const PAGES_DIR = join(FIXTURES_DIR, "pages");
+
+    it("should register dev server on app and return handle", async () => {
       const { dev } = pages();
       const app = new TabiApp();
 
-      expect(() => dev(app)).toThrow("Not implemented");
-    });
+      // dev() returns a handle to stop the dev server
+      const handle = await dev(app, { pagesDir: PAGES_DIR });
 
-    it("should throw not implemented with custom options", () => {
-      const { dev } = pages();
-      const app = new TabiApp();
+      expect(handle).toBeDefined();
+      expect(typeof handle.stop).toBe("function");
 
-      expect(() => dev(app, { pagesDir: "./custom-pages" })).toThrow(
-        "Not implemented",
-      );
+      // Clean up
+      await handle.stop();
     });
   });
 

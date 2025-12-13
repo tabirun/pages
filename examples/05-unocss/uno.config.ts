@@ -5,6 +5,7 @@ export default {
     ["p-sm", { padding: "0.5rem" }],
     ["p-md", { padding: "1rem" }],
     ["p-lg", { padding: "2rem" }],
+    ["p-xl", { padding: "4rem" }],
     ["m-sm", { margin: "0.5rem" }],
     ["m-md", { margin: "1rem" }],
     ["m-lg", { margin: "2rem" }],

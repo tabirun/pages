@@ -18,6 +18,8 @@
 
 export { pages } from "./factory.ts";
 
+export type { DevServerHandle } from "../dev/server.ts";
+
 export type {
   BuildOptions,
   DevOptions,

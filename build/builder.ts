@@ -2,7 +2,7 @@ import { dirname, isAbsolute, join, resolve } from "@std/path";
 import { emptyDir, ensureDir, walk } from "@std/fs";
 import type { ComponentType } from "preact";
 import { bundleClient, stopEsbuild } from "../bundler/client.ts";
-import { loadLayout } from "../loaders/layout-loader.ts";
+import { loadLayout, loadLayoutChain } from "../loaders/layout-loader.ts";
 import { loadPage } from "../loaders/loader.ts";
 import type { LoadedLayout, LoadedPage } from "../loaders/types.ts";
 import { renderPage } from "../renderer/renderer.tsx";
@@ -362,31 +362,6 @@ async function buildSystemPage(
     );
   }
   // deno-coverage-ignore-stop
-}
-
-/**
- * Load a chain of layouts, using cache for efficiency.
- */
-async function loadLayoutChain(
-  layoutPaths: string[],
-  cache: Map<string, LoadedLayout>,
-): Promise<LoadedLayout[]> {
-  const layouts: LoadedLayout[] = [];
-
-  for (const layoutPath of layoutPaths) {
-    let layout = cache.get(layoutPath);
-    // deno-coverage-ignore-start -- cache miss path: root layout is pre-cached before page builds, nested layouts would hit this
-    if (!layout) {
-      // Extract directory from layout path
-      const dir = dirname(layoutPath);
-      layout = await loadLayout(layoutPath, dir);
-      cache.set(layoutPath, layout);
-    }
-    // deno-coverage-ignore-stop
-    layouts.push(layout);
-  }
-
-  return layouts;
 }
 
 /**

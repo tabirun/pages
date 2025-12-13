@@ -1,6 +1,16 @@
+import { useState } from "preact/hooks";
+
 export default function HomePage() {
+  const [count, setCount] = useState(0);
+
   return (
     <div class="p-md">
+      <button type="button" onClick={() => setCount(count + 1)}>
+        click me
+      </button>
+      {count > 0 && (
+        <p class="m-sm text-sm text-secondary">Clicked {count} times</p>
+      )}
       <h1 class="text-2xl font-bold text-primary">UnoCSS Example</h1>
       <p class="text-secondary m-sm">
         This example uses UnoCSS with custom rules only - no presets.

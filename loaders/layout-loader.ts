@@ -1,4 +1,5 @@
 import type { ComponentType } from "preact";
+import { dirname } from "@std/path";
 import { type LayoutProps, type LoadedLayout, LoaderError } from "./types.ts";
 
 /**
@@ -43,4 +44,30 @@ export async function loadLayout(
     filePath,
     directory,
   };
+}
+
+/**
+ * Load a chain of layouts with optional caching.
+ *
+ * @param layoutPaths - Absolute paths to layout files, root to leaf order
+ * @param cache - Optional cache map for efficiency when loading multiple pages
+ * @returns Loaded layouts in same order
+ */
+export async function loadLayoutChain(
+  layoutPaths: string[],
+  cache?: Map<string, LoadedLayout>,
+): Promise<LoadedLayout[]> {
+  const layouts: LoadedLayout[] = [];
+
+  for (const layoutPath of layoutPaths) {
+    let layout = cache?.get(layoutPath);
+    if (!layout) {
+      const dir = dirname(layoutPath);
+      layout = await loadLayout(layoutPath, dir);
+      cache?.set(layoutPath, layout);
+    }
+    layouts.push(layout);
+  }
+
+  return layouts;
 }
