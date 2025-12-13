@@ -15,6 +15,9 @@ const IS_LOCAL = new URL(import.meta.url).protocol === "file:";
 /**
  * esbuild plugin to handle HTTP/HTTPS imports.
  * Required when framework code is loaded from JSR (remote URLs).
+ *
+ * Bare specifiers (like "preact") are left for normal resolution
+ * so they can be found in the user's node_modules.
  */
 function httpPlugin(): esbuild.Plugin {
   return {
@@ -26,8 +29,14 @@ function httpPlugin(): esbuild.Plugin {
         namespace: "http-url",
       }));
 
-      // Resolve relative imports from HTTP modules
+      // Resolve imports from HTTP modules
       build.onResolve({ filter: /.*/, namespace: "http-url" }, (args) => {
+        // Bare specifiers (no ./ or ../ or /) should use normal resolution
+        // This allows "preact" etc. to resolve from node_modules
+        if (!args.path.startsWith(".") && !args.path.startsWith("/")) {
+          return { path: args.path, external: false };
+        }
+        // Relative imports resolve against the importer URL
         const url = new URL(args.path, args.importer);
         return { path: url.href, namespace: "http-url" };
       });
@@ -91,9 +100,10 @@ export async function bundleClient(
 
   // Resolve preact directory path for entry generation
   // Use file path for local, full HTTPS URL for remote (JSR)
+  // Note: no trailing slash - entry.ts appends /filename.tsx
   const preactDir = IS_LOCAL
     ? join(dirname(fromFileUrl(import.meta.url)), "../preact")
-    : new URL("../preact/", import.meta.url).href;
+    : new URL("../preact", import.meta.url).href;
 
   // Generate entry code
   const entryCode = generateClientEntry(page, layouts, preactDir);
