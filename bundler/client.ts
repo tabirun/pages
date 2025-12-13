@@ -1,5 +1,5 @@
 import * as esbuild from "esbuild";
-import { dirname, join } from "@std/path";
+import { dirname, fromFileUrl, join } from "@std/path";
 import { ensureDir } from "@std/fs";
 import { encodeHex } from "@std/encoding/hex";
 import { generateClientEntry } from "./entry.ts";
@@ -8,6 +8,50 @@ import {
   type BundleClientResult,
   BundleError,
 } from "./types.ts";
+
+/** Whether running from local file system or remote (JSR). */
+const IS_LOCAL = new URL(import.meta.url).protocol === "file:";
+
+/**
+ * esbuild plugin to handle HTTP/HTTPS imports.
+ * Required when framework code is loaded from JSR (remote URLs).
+ */
+function httpPlugin(): esbuild.Plugin {
+  return {
+    name: "http",
+    setup(build) {
+      // Resolve HTTPS URLs
+      build.onResolve({ filter: /^https:\/\// }, (args) => ({
+        path: args.path,
+        namespace: "http-url",
+      }));
+
+      // Resolve relative imports from HTTP modules
+      build.onResolve({ filter: /.*/, namespace: "http-url" }, (args) => {
+        const url = new URL(args.path, args.importer);
+        return { path: url.href, namespace: "http-url" };
+      });
+
+      // Fetch and return HTTP content
+      build.onLoad({ filter: /.*/, namespace: "http-url" }, async (args) => {
+        const response = await fetch(args.path);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${args.path}: ${response.status}`);
+        }
+        const contents = await response.text();
+        const ext = args.path.split(".").pop() ?? "";
+        const loader = ext === "tsx"
+          ? "tsx"
+          : ext === "ts"
+          ? "ts"
+          : ext === "jsx"
+          ? "jsx"
+          : "js";
+        return { contents, loader };
+      });
+    },
+  };
+}
 
 /**
  * Bundle a page for client-side hydration.
@@ -46,10 +90,10 @@ export async function bundleClient(
   validatePaths(options);
 
   // Resolve preact directory path for entry generation
-  const preactDir = join(
-    dirname(new URL(import.meta.url).pathname),
-    "../preact",
-  );
+  // Use file path for local, full HTTPS URL for remote (JSR)
+  const preactDir = IS_LOCAL
+    ? join(dirname(fromFileUrl(import.meta.url)), "../preact")
+    : new URL("../preact/", import.meta.url).href;
 
   // Generate entry code
   const entryCode = generateClientEntry(page, layouts, preactDir);
@@ -76,6 +120,7 @@ export async function bundleClient(
       minify: mode === "production",
       sourcemap: mode === "development" ? "inline" : false,
       write: false,
+      plugins: IS_LOCAL ? [] : [httpPlugin()],
     });
 
     // deno-coverage-ignore-start -- esbuild always produces output for valid builds, defensive check
