@@ -15,8 +15,9 @@ const { dev, build, serve } = pages({
   siteMetadata: { baseUrl: "https://example.com" },
 });
 
-// Development server with hot reload
-await dev(app, { pagesDir: "./pages" });
+// Development server with hot reload (returns handle for cleanup)
+const handle = await dev(app, { pagesDir: "./pages" });
+// handle.stop() to stop the watcher
 
 // Production build
 await build({ pagesDir: "./pages", outDir: "./dist" });
