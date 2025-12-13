@@ -1,4 +1,5 @@
 import * as esbuild from "esbuild";
+import { denoPlugins } from "@luca/esbuild-deno-loader";
 import { dirname, fromFileUrl, join } from "@std/path";
 import { ensureDir } from "@std/fs";
 import { encodeHex } from "@std/encoding/hex";
@@ -11,56 +12,6 @@ import {
 
 /** Whether running from local file system or remote (JSR). */
 const IS_LOCAL = new URL(import.meta.url).protocol === "file:";
-
-/**
- * esbuild plugin to handle HTTP/HTTPS imports.
- * Required when framework code is loaded from JSR (remote URLs).
- *
- * Bare specifiers (like "preact") are left for normal resolution
- * so they can be found in the user's node_modules.
- */
-function httpPlugin(): esbuild.Plugin {
-  return {
-    name: "http",
-    setup(build) {
-      // Resolve HTTPS URLs
-      build.onResolve({ filter: /^https:\/\// }, (args) => ({
-        path: args.path,
-        namespace: "http-url",
-      }));
-
-      // Resolve imports from HTTP modules
-      build.onResolve({ filter: /.*/, namespace: "http-url" }, (args) => {
-        // Bare specifiers (no ./ or ../ or /) should use normal resolution
-        // This allows "preact" etc. to resolve from node_modules
-        if (!args.path.startsWith(".") && !args.path.startsWith("/")) {
-          return { path: args.path, external: false };
-        }
-        // Relative imports resolve against the importer URL
-        const url = new URL(args.path, args.importer);
-        return { path: url.href, namespace: "http-url" };
-      });
-
-      // Fetch and return HTTP content
-      build.onLoad({ filter: /.*/, namespace: "http-url" }, async (args) => {
-        const response = await fetch(args.path);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch ${args.path}: ${response.status}`);
-        }
-        const contents = await response.text();
-        const ext = args.path.split(".").pop() ?? "";
-        const loader = ext === "tsx"
-          ? "tsx"
-          : ext === "ts"
-          ? "ts"
-          : ext === "jsx"
-          ? "jsx"
-          : "js";
-        return { contents, loader };
-      });
-    },
-  };
-}
 
 /**
  * Bundle a page for client-side hydration.
@@ -92,8 +43,7 @@ function httpPlugin(): esbuild.Plugin {
 export async function bundleClient(
   options: BundleClientOptions,
 ): Promise<BundleClientResult> {
-  const { page, layouts, route, outDir, mode, projectRoot, basePath = "" } =
-    options;
+  const { page, layouts, route, outDir, mode, basePath = "" } = options;
 
   // Validate paths
   validatePaths(options);
@@ -115,13 +65,14 @@ export async function bundleClient(
   const outputDir = dirname(join(outDir, routeFileName));
   await ensureDir(outputDir);
 
+  // Write entry to temp file for denoPlugins to resolve
+  const entryPath = join(outDir, "__entry.tsx");
+  await ensureDir(dirname(entryPath));
+  await Deno.writeTextFile(entryPath, entryCode);
+
   try {
     const result = await esbuild.build({
-      stdin: {
-        contents: entryCode,
-        loader: "tsx",
-        resolveDir: projectRoot,
-      },
+      entryPoints: [entryPath],
       bundle: true,
       format: "esm",
       target: "es2020",
@@ -130,7 +81,7 @@ export async function bundleClient(
       minify: mode === "production",
       sourcemap: mode === "development" ? "inline" : false,
       write: false,
-      plugins: IS_LOCAL ? [] : [httpPlugin()],
+      plugins: [...denoPlugins()],
     });
 
     // deno-coverage-ignore-start -- esbuild always produces output for valid builds, defensive check
@@ -178,6 +129,13 @@ export async function bundleClient(
       { cause: error instanceof Error ? error : undefined },
     );
     // deno-coverage-ignore-stop
+  } finally {
+    // Clean up temp entry file
+    try {
+      await Deno.remove(entryPath);
+    } catch {
+      // Ignore cleanup errors
+    }
   }
 }
 
