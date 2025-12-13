@@ -55,7 +55,7 @@ type BuildOutput = BuildResult | BuildError;
 interface DevServerState {
   pagesDir: string;
   basePath: string;
-  tempDir: string;
+  outDir: string;
   manifest: PageManifest;
   wsClients: Set<WebSocket>;
   watchHandle: WatchHandle | null;
@@ -75,7 +75,7 @@ export interface DevServerHandle {
  * Behavior:
  * - Serves pages by building on-demand via subprocess
  * - WebSocket endpoint for hot reload notifications
- * - Serves client bundles from temp directory
+ * - Serves client bundles from .tabi directory
  * - Serves public assets from public directory
  * - File watcher broadcasts reload on any change
  *
@@ -91,9 +91,14 @@ export async function registerDevServer(
   const basePath = options.basePath ?? "";
   const projectRoot = dirname(pagesDir);
   const publicDir = join(projectRoot, "public");
+  const outDir = join(projectRoot, ".tabi");
 
-  // Create temp directory for bundles
-  const tempDir = await Deno.makeTempDir({ prefix: "tabi-dev-" });
+  // Create .tabi directory for dev builds
+  try {
+    await Deno.mkdir(outDir, { recursive: true });
+  } catch {
+    // Directory may already exist
+  }
 
   // Initial scan
   const manifest = await scanPages({
@@ -105,7 +110,7 @@ export async function registerDevServer(
   const state: DevServerState = {
     pagesDir,
     basePath,
-    tempDir,
+    outDir,
     manifest,
     wsClients: new Set(),
     watchHandle: null,
@@ -147,7 +152,7 @@ export async function registerDevServer(
     });
   });
 
-  // Serve bundles from temp directory
+  // Serve bundles from .tabi directory
   const bundlePattern = basePath ? `${basePath}/__tabi/*` : "/__tabi/*";
   app.get(bundlePattern, async (c) => {
     const pathname = c.req.url.pathname;
@@ -161,23 +166,22 @@ export async function registerDevServer(
       return;
     }
 
-    const filePath = resolve(join(tempDir, "__tabi", bundlePath));
+    const filePath = resolve(join(outDir, "__tabi", bundlePath));
 
-    // Ensure resolved path is still within tempDir
-    if (!filePath.startsWith(tempDir + "/")) {
+    // Ensure resolved path is still within outDir
+    if (!filePath.startsWith(outDir + "/")) {
       c.notFound();
       return;
     }
 
     try {
       await c.file(filePath);
-      c.header("Content-Type", "application/javascript; charset=UTF-8");
     } catch {
       c.notFound();
     }
   });
 
-  // Serve UnoCSS from temp directory
+  // Serve UnoCSS from .tabi directory
   const stylesPattern = basePath ? `${basePath}/__styles/*` : "/__styles/*";
   app.get(stylesPattern, async (c) => {
     const pathname = c.req.url.pathname;
@@ -191,39 +195,35 @@ export async function registerDevServer(
       return;
     }
 
-    const filePath = resolve(join(tempDir, "__styles", stylePath));
+    const filePath = resolve(join(outDir, "__styles", stylePath));
 
-    // Ensure resolved path is still within tempDir
-    if (!filePath.startsWith(tempDir + "/")) {
+    // Ensure resolved path is still within outDir
+    if (!filePath.startsWith(outDir + "/")) {
       c.notFound();
       return;
     }
 
     try {
       await c.file(filePath);
-      c.header("Content-Type", "text/css; charset=UTF-8");
     } catch {
       c.notFound();
     }
   });
 
-  // Serve public assets
+  // Combined public assets + page handler (can't register same route twice)
+  // MUST be registered last - catches all routes not matched by specific handlers above
   const publicPattern = basePath ? `${basePath}/*` : "/*";
   app.get(
     publicPattern,
     serveFiles({
       directory: publicDir,
       serveIndex: false,
-      onNotFound: () => {
-        // Don't handle 404 here, let it fall through to page handler
+      onNotFound: async (c) => {
+        // Public asset not found, try handling as page request
+        await handlePageRequest(c, state);
       },
     }),
   );
-
-  // Handle page requests (catch-all, registered last)
-  app.get(publicPattern, async (c) => {
-    await handlePageRequest(c, state);
-  });
 
   // Return cleanup handle
   return {
@@ -244,9 +244,9 @@ export async function registerDevServer(
       }
       state.wsClients.clear();
 
-      // Remove temp directory
+      // Clean up .tabi directory
       try {
-        await Deno.remove(state.tempDir, { recursive: true });
+        await Deno.remove(state.outDir, { recursive: true });
       } catch {
         // Ignore cleanup errors
       }
@@ -263,7 +263,7 @@ async function handlePageRequest(
   c: TabiContext,
   state: DevServerState,
 ): Promise<void> {
-  const { pagesDir, basePath, tempDir, manifest } = state;
+  const { pagesDir, basePath, outDir, manifest } = state;
 
   // Get route from request path
   let route = c.req.url.pathname;
@@ -285,7 +285,7 @@ async function handlePageRequest(
       const result = await buildPageSubprocess(
         pagesDir,
         "/_not-found",
-        tempDir,
+        outDir,
         basePath,
       );
 
@@ -296,24 +296,33 @@ async function handlePageRequest(
       }
     }
 
-    c.html(
+    const notFoundHtml = injectHmrScript(
       renderErrorPage("Page Not Found", `No page found for route: ${route}`),
-      404,
+      basePath,
     );
+    c.html(notFoundHtml, 404);
     return;
   }
 
   // Build page via subprocess
-  const result = await buildPageSubprocess(pagesDir, route, tempDir, basePath);
+  const result = await buildPageSubprocess(pagesDir, route, outDir, basePath);
 
   if (!result.success) {
-    c.html(renderErrorPage("Build Error", result.error, result.stack), 500);
+    const errorHtml = injectHmrScript(
+      renderErrorPage("Build Error", result.error, result.stack),
+      basePath,
+    );
+    c.html(errorHtml, 500);
+    logger.ephemeral.error(`Error rendering ${route}: ${result.error}`);
     return;
   }
 
   // Inject HMR script and respond
   const html = injectHmrScript(result.html, basePath);
   c.html(html);
+
+  // Log rendered page (ephemeral - overwrites previous line)
+  logger.ephemeral.info(`Rendered ${route}`);
 }
 
 /**
