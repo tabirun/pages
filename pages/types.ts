@@ -1,4 +1,5 @@
 import type { TabiApp } from "@tabirun/app";
+import type { DevServerHandle } from "../dev/server.ts";
 import type { z } from "zod";
 import type { PagesConfigSchema, SiteMetadataSchema } from "./config.ts";
 
@@ -40,8 +41,12 @@ export interface ServeOptions {
 
 /**
  * Dev server function - registers middleware on app for development.
+ * Returns a handle to stop the dev server.
  */
-export type DevFn = (app: TabiApp, options?: DevOptions) => Promise<void>;
+export type DevFn = (
+  app: TabiApp,
+  options?: DevOptions,
+) => Promise<DevServerHandle>;
 
 /**
  * Build function - generates static site.

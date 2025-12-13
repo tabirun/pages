@@ -52,9 +52,9 @@ export function pages(config: PagesConfig = {}): PagesInstance {
   const parsed = PagesConfigSchema.parse(config);
   const basePath = parsed.basePath;
 
-  async function dev(app: TabiApp, options: DevOptions = {}): Promise<void> {
+  async function dev(app: TabiApp, options: DevOptions = {}) {
     const pagesDir = resolve(options.pagesDir ?? DEFAULT_PAGES_DIR);
-    await registerDevServer(app, { pagesDir, basePath });
+    return await registerDevServer(app, { pagesDir, basePath });
   }
 
   async function build(options: BuildOptions = {}): Promise<void> {
