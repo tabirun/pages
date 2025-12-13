@@ -9,11 +9,23 @@ import DefaultError, {
   frontmatter as errorFrontmatter,
 } from "./defaults/_error.tsx";
 
-// Resolve file paths for client bundling (using fromFileUrl for Windows compatibility)
-const DEFAULTS_DIR = join(
-  dirname(fromFileUrl(import.meta.url)),
-  "defaults",
-);
+/** Whether running from local file system or remote (JSR). */
+const IS_LOCAL = new URL(import.meta.url).protocol === "file:";
+
+/**
+ * Resolve path to a default page file.
+ * Handles both local (file://) and remote (https://) module URLs.
+ * Remote URLs occur when package is consumed from JSR.
+ */
+function resolveDefaultPath(filename: string): string {
+  if (IS_LOCAL) {
+    // Local development: use file path
+    return join(dirname(fromFileUrl(import.meta.url)), "defaults", filename);
+  }
+
+  // Remote (JSR): use URL directly - esbuild handles HTTP imports
+  return new URL(`./defaults/${filename}`, import.meta.url).href;
+}
 
 /**
  * Create a LoadedTsxPage for the default not found page.
@@ -23,7 +35,7 @@ export function createDefaultNotFoundPage(): LoadedTsxPage {
     type: "tsx",
     frontmatter: notFoundFrontmatter,
     component: DefaultNotFound,
-    filePath: join(DEFAULTS_DIR, "_not-found.tsx"),
+    filePath: resolveDefaultPath("_not-found.tsx"),
   };
 }
 
@@ -35,6 +47,6 @@ export function createDefaultErrorPage(): LoadedTsxPage {
     type: "tsx",
     frontmatter: errorFrontmatter,
     component: DefaultError,
-    filePath: join(DEFAULTS_DIR, "_error.tsx"),
+    filePath: resolveDefaultPath("_error.tsx"),
   };
 }
