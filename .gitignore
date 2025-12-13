@@ -12,3 +12,6 @@ node_modules
 
 # Docs build
 **/dist
+
+# Tabi
+.tabi
