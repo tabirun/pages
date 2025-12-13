@@ -334,7 +334,11 @@ async function buildPageSubprocess(
   outDir: string,
   basePath: string,
 ): Promise<BuildOutput> {
-  const buildPagePath = new URL("./build-page.ts", import.meta.url).pathname;
+  // Use full URL for remote (JSR), pathname for local files
+  const buildPageUrl = new URL("./build-page.ts", import.meta.url);
+  const buildPagePath = buildPageUrl.protocol === "file:"
+    ? buildPageUrl.pathname
+    : buildPageUrl.href;
 
   const command = new Deno.Command("deno", {
     args: ["run", "-A", buildPagePath, pagesDir, route, outDir, basePath],
