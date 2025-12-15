@@ -92,18 +92,18 @@ describe("serializePageData", () => {
       expect(data.frontmatter).toEqual({});
     });
 
-    it("serializes markdown page with draft field", () => {
+    it("serializes markdown page with custom fields", () => {
       const page: LoadedMarkdownPage = {
         type: "markdown",
         frontmatter: {
-          title: "Work in Progress",
-          draft: true,
+          title: "Blog Post",
+          author: "Jane Doe",
         },
-        content: "# Draft content",
-        filePath: "/pages/drafts/wip.md",
+        content: "# Blog content",
+        filePath: "/pages/blog/post.md",
       };
 
-      const result = serializePageData(page, "/drafts/wip", emptyCache());
+      const result = serializePageData(page, "/blog/post", emptyCache());
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -118,7 +118,7 @@ describe("serializePageData", () => {
 
       const data = JSON.parse(json);
 
-      expect(data.frontmatter.draft).toBe(true);
+      expect(data.frontmatter.author).toBe("Jane Doe");
     });
   });
 

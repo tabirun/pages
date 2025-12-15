@@ -27,14 +27,6 @@ describe("loadTsxPage", () => {
       expect(typeof result.component).toBe("function");
     });
 
-    it("loads TSX page with draft field", async () => {
-      const filePath = `${FIXTURES_DIR}draft-page.tsx`;
-      const result = await loadTsxPage(filePath);
-
-      expect(result.frontmatter.draft).toBe(true);
-      expect(result.frontmatter.title).toBe("Draft Page");
-    });
-
     it("loads TSX page with custom fields", async () => {
       const filePath = `${FIXTURES_DIR}custom-fields-page.tsx`;
       const result = await loadTsxPage(filePath);
