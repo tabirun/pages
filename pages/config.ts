@@ -20,9 +20,13 @@ const BASE_PATH_REGEX = /^(\/[a-z0-9_-]+)*$/;
  * Schema for pages factory configuration.
  */
 export const PagesConfigSchema: z.ZodType<
-  { basePath: string; siteMetadata?: { baseUrl: string } },
+  { basePath: string; shikiTheme?: string; siteMetadata?: { baseUrl: string } },
   z.ZodTypeDef,
-  { basePath?: string; siteMetadata?: { baseUrl: string } }
+  {
+    basePath?: string;
+    shikiTheme?: string;
+    siteMetadata?: { baseUrl: string };
+  }
 > = z.object({
   /**
    * Base path prefix for the site.
@@ -39,6 +43,12 @@ export const PagesConfigSchema: z.ZodType<
     )
     .optional()
     .default(""),
+  /**
+   * Shiki theme for syntax highlighting in code blocks.
+   * @default "github-dark"
+   * @see https://shiki.style/themes
+   */
+  shikiTheme: z.string().optional(),
   /** Site metadata - required for sitemap.xml generation. */
   siteMetadata: SiteMetadataSchema.optional(),
 });

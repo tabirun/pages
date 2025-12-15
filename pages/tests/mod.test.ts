@@ -1,10 +1,20 @@
-import { afterAll, beforeAll, describe, it } from "@std/testing/bdd";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  it,
+} from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { join } from "@std/path";
 import { exists } from "@std/fs";
 import { TabiApp } from "@tabirun/app";
 import { pages } from "../mod.ts";
 import { PagesConfigSchema } from "../config.ts";
+import {
+  _resetShikiForTesting,
+  getConfiguredTheme,
+} from "../../markdown/shiki.ts";
 
 describe("pages", () => {
   describe("factory", () => {
@@ -107,6 +117,31 @@ describe("pages", () => {
           const result = PagesConfigSchema.parse({ basePath: "/" });
           expect(result.basePath).toBe("");
         });
+      });
+    });
+
+    describe("shikiTheme configuration", () => {
+      beforeEach(() => {
+        _resetShikiForTesting();
+      });
+
+      afterAll(() => {
+        _resetShikiForTesting();
+      });
+
+      it("should use default theme when shikiTheme not specified", () => {
+        pages();
+        expect(getConfiguredTheme()).toBe("github-dark");
+      });
+
+      it("should configure custom theme when shikiTheme is specified", () => {
+        pages({ shikiTheme: "nord" });
+        expect(getConfiguredTheme()).toBe("nord");
+      });
+
+      it("should accept any valid theme string", () => {
+        expect(() => pages({ shikiTheme: "dracula" })).not.toThrow();
+        expect(getConfiguredTheme()).toBe("dracula");
       });
     });
   });
