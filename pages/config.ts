@@ -39,6 +39,6 @@ export const PagesConfigSchema: z.ZodType<
     )
     .optional()
     .default(""),
-  /** Site metadata - required for sitemap.xml and robots.txt generation. */
+  /** Site metadata - required for sitemap.xml generation. */
   siteMetadata: SiteMetadataSchema.optional(),
 });
