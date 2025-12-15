@@ -14,6 +14,7 @@
 
 import { basename, dirname, join } from "@std/path";
 import { bundleClient, stopEsbuild } from "../bundler/client.ts";
+import { loadDocument } from "../loaders/html-loader.ts";
 import { loadLayoutChain } from "../loaders/layout-loader.ts";
 import { loadPage } from "../loaders/loader.ts";
 import { renderPage } from "../renderer/renderer.tsx";
@@ -127,6 +128,11 @@ async function buildPage(
   // Load layouts
   const layouts = await loadLayoutChain(pageEntry.layoutChain);
 
+  // Load custom document template if _html.tsx exists
+  const documentComponent = manifest.systemFiles.html
+    ? (await loadDocument(manifest.systemFiles.html)).component
+    : undefined;
+
   // Bundle client JS
   const bundleResult = await bundleClient({
     page,
@@ -144,6 +150,7 @@ async function buildPage(
     layouts,
     clientBundlePath: bundleResult.publicPath,
     route,
+    document: documentComponent,
     basePath,
   });
 
