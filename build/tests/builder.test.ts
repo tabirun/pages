@@ -23,6 +23,16 @@ const FIXTURES_UNOCSS_DIR = new URL(
 const PAGES_UNOCSS_DIR = join(FIXTURES_UNOCSS_DIR, "pages");
 const TEST_OUT_UNOCSS_DIR = join(FIXTURES_UNOCSS_DIR, ".dist-test");
 
+const FIXTURES_HTML_TEMPLATE_DIR = new URL(
+  "./fixtures-html-template/",
+  import.meta.url,
+).pathname;
+const PAGES_HTML_TEMPLATE_DIR = join(FIXTURES_HTML_TEMPLATE_DIR, "pages");
+const TEST_OUT_HTML_TEMPLATE_DIR = join(
+  FIXTURES_HTML_TEMPLATE_DIR,
+  ".dist-test",
+);
+
 describe("buildSite", () => {
   beforeAll(async () => {
     // Clean up any previous test output
@@ -38,6 +48,11 @@ describe("buildSite", () => {
     }
     try {
       await Deno.remove(TEST_OUT_UNOCSS_DIR, { recursive: true });
+    } catch {
+      // Ignore if doesn't exist
+    }
+    try {
+      await Deno.remove(TEST_OUT_HTML_TEMPLATE_DIR, { recursive: true });
     } catch {
       // Ignore if doesn't exist
     }
@@ -57,6 +72,11 @@ describe("buildSite", () => {
     }
     try {
       await Deno.remove(TEST_OUT_UNOCSS_DIR, { recursive: true });
+    } catch {
+      // Ignore if doesn't exist
+    }
+    try {
+      await Deno.remove(TEST_OUT_HTML_TEMPLATE_DIR, { recursive: true });
     } catch {
       // Ignore if doesn't exist
     }
@@ -476,6 +496,61 @@ describe("buildSite", () => {
       });
 
       expect(result.sitemap).toBeUndefined();
+    });
+  });
+
+  describe("custom HTML template", () => {
+    it("uses _html.tsx when present", async () => {
+      const result = await buildSite({
+        pagesDir: PAGES_HTML_TEMPLATE_DIR,
+        outDir: TEST_OUT_HTML_TEMPLATE_DIR,
+      });
+
+      const indexPage = result.pages.find((p) => p.route === "/");
+      const html = await Deno.readTextFile(indexPage!.htmlPath);
+
+      // Check custom document attributes are present
+      expect(html).toContain('data-testid="custom-document"');
+      expect(html).toContain('class="custom-body-class"');
+      expect(html).toContain('name="custom-meta" content="from-html-template"');
+    });
+
+    it("applies custom document to system pages", async () => {
+      const result = await buildSite({
+        pagesDir: PAGES_HTML_TEMPLATE_DIR,
+        outDir: TEST_OUT_HTML_TEMPLATE_DIR,
+      });
+
+      // Check _not-found uses custom document
+      const notFoundPage = result.pages.find((p) => p.route === "/_not-found");
+      const notFoundHtml = await Deno.readTextFile(notFoundPage!.htmlPath);
+      expect(notFoundHtml).toContain('data-testid="custom-document"');
+      expect(notFoundHtml).toContain('class="custom-body-class"');
+
+      // Check _error uses custom document
+      const errorPage = result.pages.find((p) => p.route === "/_error");
+      const errorHtml = await Deno.readTextFile(errorPage!.htmlPath);
+      expect(errorHtml).toContain('data-testid="custom-document"');
+      expect(errorHtml).toContain('class="custom-body-class"');
+    });
+
+    it("uses default document when _html.tsx not present", async () => {
+      // Build site without _html.tsx (existing fixtures)
+      const result = await buildSite({
+        pagesDir: PAGES_DIR,
+        outDir: TEST_OUT_DIR,
+      });
+
+      const indexPage = result.pages.find((p) => p.route === "/");
+      const html = await Deno.readTextFile(indexPage!.htmlPath);
+
+      // Should NOT have custom document markers
+      expect(html).not.toContain('data-testid="custom-document"');
+      expect(html).not.toContain('class="custom-body-class"');
+      // Should have default structure
+      expect(html).toContain("<html");
+      expect(html).toContain("<head>");
+      expect(html).toContain("<body>");
     });
   });
 

@@ -2,6 +2,7 @@ import { dirname, isAbsolute, join, resolve } from "@std/path";
 import { emptyDir, ensureDir, walk } from "@std/fs";
 import type { ComponentType } from "preact";
 import { bundleClient, stopEsbuild } from "../bundler/client.ts";
+import { loadDocument } from "../loaders/html-loader.ts";
 import { loadLayout, loadLayoutChain } from "../loaders/layout-loader.ts";
 import { loadPage } from "../loaders/loader.ts";
 import type { LoadedLayout, LoadedPage } from "../loaders/types.ts";
@@ -79,6 +80,14 @@ export async function buildSite(
       layoutCache.set(rootLayoutEntry.filePath, rootLayout);
     }
 
+    // Load custom document template if _html.tsx exists
+    // Programmatic document option takes precedence over file-based _html.tsx
+    let documentComponent = document;
+    if (!documentComponent && manifest.systemFiles.html) {
+      const loadedDoc = await loadDocument(manifest.systemFiles.html);
+      documentComponent = loadedDoc.component;
+    }
+
     // Build each page
     const results: BuildPageResult[] = [];
 
@@ -88,7 +97,7 @@ export async function buildSite(
         pagesDir,
         outDir,
         layoutCache,
-        document,
+        document: documentComponent,
         basePath,
       });
       results.push(result);
@@ -103,7 +112,7 @@ export async function buildSite(
       rootLayout,
       pagesDir,
       outDir,
-      document,
+      document: documentComponent,
       basePath,
     });
     results.push(notFoundResult);
@@ -117,7 +126,7 @@ export async function buildSite(
       rootLayout,
       pagesDir,
       outDir,
-      document,
+      document: documentComponent,
       basePath,
     });
     results.push(errorResult);
