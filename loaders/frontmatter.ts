@@ -14,7 +14,6 @@ const FRONTMATTER_REGEX = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 export const PageFrontmatterSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
-  draft: z.boolean().optional(),
 }).passthrough();
 
 /**

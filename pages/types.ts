@@ -4,7 +4,7 @@ import type { z } from "zod";
 import type { PagesConfigSchema, SiteMetadataSchema } from "./config.ts";
 
 /**
- * Site metadata configuration. When provided, enables sitemap.xml and robots.txt generation.
+ * Site metadata configuration. When provided, enables sitemap.xml generation.
  */
 export type SiteMetadata = z.infer<typeof SiteMetadataSchema>;
 

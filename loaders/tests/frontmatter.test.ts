@@ -10,7 +10,6 @@ describe("parseFrontmatter", () => {
       const raw = `---
 title: Hello World
 description: A test page
-draft: true
 ---
 # Content here`;
 
@@ -19,7 +18,6 @@ draft: true
       expect(result.frontmatter).toEqual({
         title: "Hello World",
         description: "A test page",
-        draft: true,
       });
       expect(result.content).toBe("# Content here");
     });
@@ -34,7 +32,6 @@ Content`;
 
       expect(result.frontmatter.title).toBe("Just a Title");
       expect(result.frontmatter.description).toBeUndefined();
-      expect(result.frontmatter.draft).toBeUndefined();
       expect(result.content).toBe("Content");
     });
 

@@ -30,9 +30,10 @@ serve(app, { dir: "./dist" });
 
 ### PagesConfig
 
-| Option         | Type           | Description                        |
-| -------------- | -------------- | ---------------------------------- |
-| `siteMetadata` | `SiteMetadata` | Enables sitemap.xml and robots.txt |
+| Option         | Type           | Description                                          |
+| -------------- | -------------- | ---------------------------------------------------- |
+| `shikiTheme`   | `string`       | Shiki theme for code blocks (default: "github-dark") |
+| `siteMetadata` | `SiteMetadata` | Enables sitemap.xml generation                       |
 
 ### SiteMetadata
 

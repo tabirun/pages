@@ -27,13 +27,6 @@ describe("loadMarkdownPage", () => {
       expect(result.content).toBe("# Just Content\n\nNo frontmatter.\n");
     });
 
-    it("loads markdown with draft field", async () => {
-      const filePath = `${FIXTURES_DIR}draft-page.md`;
-      const result = await loadMarkdownPage(filePath);
-
-      expect(result.frontmatter.draft).toBe(true);
-    });
-
     it("loads markdown with custom fields", async () => {
       const filePath = `${FIXTURES_DIR}custom-fields.md`;
       const result = await loadMarkdownPage(filePath);

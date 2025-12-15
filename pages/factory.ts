@@ -2,6 +2,7 @@ import { resolve } from "@std/path";
 import type { TabiApp } from "@tabirun/app";
 import { buildSite } from "../build/builder.ts";
 import { registerDevServer } from "../dev/server.ts";
+import { configureHighlighter } from "../markdown/shiki.ts";
 import { registerStaticServer } from "../serve/server.ts";
 import { PagesConfigSchema } from "./config.ts";
 import type {
@@ -22,7 +23,7 @@ const DEFAULT_OUT_DIR = "./dist";
  * ```ts
  * import { pages } from "@tabirun/pages";
  *
- * // Minimal setup (no sitemap/robots.txt generation)
+ * // Minimal setup
  * const { dev, build, serve } = pages();
  *
  * // With base path (for hosting at a subpath like /docs)
@@ -30,7 +31,12 @@ const DEFAULT_OUT_DIR = "./dist";
  *   basePath: "/docs",
  * });
  *
- * // With site metadata (enables sitemap.xml and robots.txt)
+ * // With custom syntax highlighting theme
+ * const { dev, build, serve } = pages({
+ *   shikiTheme: "nord",
+ * });
+ *
+ * // With site metadata (enables sitemap.xml)
  * const { dev, build, serve } = pages({
  *   siteMetadata: { baseUrl: "https://example.com" },
  * });
@@ -51,6 +57,11 @@ const DEFAULT_OUT_DIR = "./dist";
 export function pages(config: PagesConfig = {}): PagesInstance {
   const parsed = PagesConfigSchema.parse(config);
   const basePath = parsed.basePath;
+
+  // Configure syntax highlighting theme if specified
+  if (parsed.shikiTheme) {
+    configureHighlighter({ theme: parsed.shikiTheme });
+  }
 
   async function dev(app: TabiApp, options: DevOptions = {}) {
     const pagesDir = resolve(options.pagesDir ?? DEFAULT_PAGES_DIR);

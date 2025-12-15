@@ -9,8 +9,6 @@ export interface PageFrontmatter {
   title?: string;
   /** Page description. */
   description?: string;
-  /** Draft status - excluded from production builds. */
-  draft?: boolean;
   /** Additional custom fields. */
   [key: string]: unknown;
 }
