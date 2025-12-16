@@ -353,7 +353,21 @@ async function buildPageSubprocess(
     ? buildPageUrl.pathname
     : buildPageUrl.href;
 
-  const args = ["run", "-A", buildPagePath, pagesDir, route, outDir, basePath];
+  // Project root is parent of pagesDir
+  const projectRoot = dirname(pagesDir);
+  const projectConfig = join(projectRoot, "deno.json");
+
+  // Build args with project config for import map resolution
+  const args = [
+    "run",
+    "-A",
+    `--config=${projectConfig}`,
+    buildPagePath,
+    pagesDir,
+    route,
+    outDir,
+    basePath,
+  ];
   if (markdownClassName) {
     args.push(markdownClassName);
   }
