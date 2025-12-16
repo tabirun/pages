@@ -24,6 +24,13 @@ export interface UnoCompileOptions {
    * @example "/docs"
    */
   basePath?: string;
+  /**
+   * Path to project's deno.json (optional).
+   * When provided in dev mode, runs UnoCSS compilation in a subprocess
+   * with --config to resolve project dependencies without affecting
+   * preact version resolution.
+   */
+  projectConfig?: string;
 }
 
 /**
@@ -61,20 +68,23 @@ export interface UnoCompileResult {
 export async function compileUnoCSS(
   options: UnoCompileOptions,
 ): Promise<UnoCompileResult> {
-  const { configPath, projectRoot, outDir, basePath = "" } = options;
+  const { configPath, projectRoot, outDir, basePath = "", projectConfig } =
+    options;
 
   try {
-    // Load user's UnoCSS config
-    const config = await loadUnoConfig(configPath);
-
-    // Create generator with user config
-    const generator = await createGenerator(config);
-
-    // Scan source files for classes
-    const sourceContent = await scanSourceContent(projectRoot);
-
-    // Generate CSS
-    const { css } = await generator.generate(sourceContent);
+    // Generate CSS - use subprocess if projectConfig provided (dev mode)
+    // to avoid preact version conflicts while still resolving project deps
+    let css: string;
+    if (projectConfig) {
+      css = await compileInSubprocess(configPath, projectRoot, projectConfig);
+    } else {
+      // Direct compilation (production build runs in project context)
+      const config = await loadUnoConfig(configPath);
+      const generator = await createGenerator(config);
+      const sourceContent = await scanSourceContent(projectRoot);
+      const result = await generator.generate(sourceContent);
+      css = result.css ?? "";
+    }
 
     // If no CSS generated, return empty result
     if (!css || css.trim().length === 0) {
@@ -113,6 +123,68 @@ export async function compileUnoCSS(
       { cause: error instanceof Error ? error : undefined },
     );
     // deno-coverage-ignore-stop
+  }
+}
+
+/**
+ * Compile UnoCSS in a subprocess with project's import map.
+ * This allows resolving project dependencies (like presets) without
+ * affecting preact version resolution in the main process.
+ */
+async function compileInSubprocess(
+  configPath: string,
+  projectRoot: string,
+  projectConfig: string,
+): Promise<string> {
+  const subprocessUrl = new URL("./compile-subprocess.ts", import.meta.url);
+  const subprocessPath = subprocessUrl.protocol === "file:"
+    ? subprocessUrl.pathname
+    : subprocessUrl.href;
+
+  const command = new Deno.Command("deno", {
+    args: [
+      "run",
+      "-A",
+      `--config=${projectConfig}`,
+      subprocessPath,
+      configPath,
+      projectRoot,
+    ],
+    stdout: "piped",
+    stderr: "piped",
+  });
+
+  const { code, stdout, stderr } = await command.output();
+  const stdoutText = new TextDecoder().decode(stdout);
+  const stderrText = new TextDecoder().decode(stderr);
+
+  if (code !== 0) {
+    // Try to parse JSON error from stdout
+    try {
+      const result = JSON.parse(stdoutText) as {
+        success: false;
+        error: string;
+      };
+      throw new BuildError(
+        `UnoCSS compilation failed: ${result.error}`,
+        undefined,
+      );
+    } catch {
+      throw new BuildError(
+        `UnoCSS compilation failed: ${stderrText || `exit code ${code}`}`,
+        undefined,
+      );
+    }
+  }
+
+  try {
+    const result = JSON.parse(stdoutText) as { success: true; css: string };
+    return result.css;
+  } catch {
+    throw new BuildError(
+      `Failed to parse UnoCSS subprocess output: ${stdoutText}`,
+      undefined,
+    );
   }
 }
 
