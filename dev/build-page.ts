@@ -5,7 +5,7 @@
  * It takes command line arguments, builds the requested page, and
  * outputs JSON to stdout.
  *
- * Usage: deno run -A dev/build-page.ts <pagesDir> <route> <outDir> [basePath] [markdownClassName]
+ * Usage: deno run -A dev/build-page.ts <pagesDir> <route> <outDir> <basePath> <markdownClassName> [projectConfig]
  *
  * Output (JSON to stdout):
  * Success: { success: true, html: string, bundlePublicPath: string, unoPublicPath?: string }
@@ -37,17 +37,18 @@ interface BuildError {
 async function main(): Promise<void> {
   const args = Deno.args;
 
-  if (args.length < 3) {
+  if (args.length < 5) {
     const error: BuildError = {
       success: false,
       error:
-        "Usage: deno run -A dev/build-page.ts <pagesDir> <route> <outDir> [basePath] [markdownClassName]",
+        "Usage: deno run -A dev/build-page.ts <pagesDir> <route> <outDir> <basePath> <markdownClassName> [projectConfig]",
     };
     console.log(JSON.stringify(error));
     Deno.exit(1);
   }
 
-  const [pagesDir, route, outDir, basePath = "", markdownClassName] = args;
+  const [pagesDir, route, outDir, basePath, markdownClassName, projectConfig] =
+    args;
 
   // Validate paths before use
   // Note: All output goes to stdout as JSON for parent process to parse
@@ -84,7 +85,8 @@ async function main(): Promise<void> {
       route,
       outDir,
       basePath,
-      markdownClassName,
+      markdownClassName || undefined,
+      projectConfig || undefined,
     );
     console.log(JSON.stringify(result));
   } catch (err) {
@@ -106,6 +108,7 @@ async function buildPage(
   outDir: string,
   basePath: string,
   markdownClassName?: string,
+  projectConfig?: string,
 ): Promise<BuildResult> {
   // pagesDir is absolute (e.g., /project/pages), derive projectRoot and dir name
   const projectRoot = dirname(pagesDir);
@@ -172,6 +175,7 @@ async function buildPage(
       projectRoot,
       outDir,
       basePath,
+      projectConfig,
     });
 
     if (unoResult.css) {
