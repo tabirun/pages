@@ -347,9 +347,13 @@ async function createMergedImportMap(
   projectConfig: string | null,
 ): Promise<string> {
   // Start with preact overrides - must match @tabirun/pages versions
+  // Note: trailing slash patterns don't work with npm specifiers, must map each subpath
   const preactOverrides: Record<string, string> = {
     "preact": "npm:preact@^10.25.4",
-    "preact/": "npm:preact@^10.25.4/",
+    "preact/hooks": "npm:preact@^10.25.4/hooks",
+    "preact/jsx-runtime": "npm:preact@^10.25.4/jsx-runtime",
+    "preact/jsx-dev-runtime": "npm:preact@^10.25.4/jsx-dev-runtime",
+    "preact/compat": "npm:preact@^10.25.4/compat",
     "preact-render-to-string": "npm:preact-render-to-string@^6.5.13",
   };
 
