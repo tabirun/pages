@@ -74,3 +74,4 @@ serve(app, { dir: "./dist" });
 - File-based routing: `pages/*.{md,tsx}` maps to URL paths
 - Nested layouts via `_layout.tsx` files
 - Markdown pages use GFM with Shiki syntax highlighting
+- Preact version is managed by the framework to ensure context compatibility
