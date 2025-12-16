@@ -338,6 +338,43 @@ async function handlePageRequest(
 }
 
 /**
+ * Create an import map that merges the project's config with preact overrides.
+ * This ensures user code uses the same preact version as @tabirun/pages
+ * while preserving other project dependencies.
+ */
+async function createMergedImportMap(
+  outDir: string,
+  projectConfig: string | null,
+): Promise<string> {
+  // Start with preact overrides - must match @tabirun/pages versions
+  const preactOverrides: Record<string, string> = {
+    "preact": "npm:preact@^10.25.4",
+    "preact/": "npm:preact@^10.25.4/",
+    "preact-render-to-string": "npm:preact-render-to-string@^6.5.13",
+  };
+
+  // Load project's import map if available
+  let projectImports: Record<string, string> = {};
+  if (projectConfig) {
+    try {
+      const configText = await Deno.readTextFile(projectConfig);
+      const config = JSON.parse(configText);
+      projectImports = config.imports ?? {};
+    } catch {
+      // Ignore errors reading config
+    }
+  }
+
+  // Merge: project imports + preact overrides (preact takes precedence)
+  const mergedImports = { ...projectImports, ...preactOverrides };
+
+  const importMap = { imports: mergedImports };
+  const importMapPath = join(outDir, "import-map.json");
+  await Deno.writeTextFile(importMapPath, JSON.stringify(importMap, null, 2));
+  return importMapPath;
+}
+
+/**
  * Find the nearest deno.json by walking up from a directory.
  */
 async function findDenoConfig(startDir: string): Promise<string | null> {
@@ -376,18 +413,30 @@ async function buildPageSubprocess(
     ? buildPageUrl.pathname
     : buildPageUrl.href;
 
-  // Find project config for import map resolution
+  // Find project config for UnoCSS import resolution
   const projectConfig = await findDenoConfig(pagesDir);
 
-  // Build args, optionally with project config
+  // Build args - only use import map when running from JSR
+  // Local files inherit parent's import map, but JSR needs explicit mapping
+  const isRunningFromJsr = buildPageUrl.protocol === "https:";
   const args = ["run", "-A"];
-  if (projectConfig) {
-    args.push(`--config=${projectConfig}`);
+
+  if (isRunningFromJsr && projectConfig) {
+    // Create merged import map: project deps + preact overrides
+    // This ensures user code uses the same preact version as @tabirun/pages
+    const importMapPath = await createMergedImportMap(outDir, projectConfig);
+    args.push(`--import-map=${importMapPath}`);
   }
-  args.push(buildPagePath, pagesDir, route, outDir, basePath);
-  if (markdownClassName) {
-    args.push(markdownClassName);
-  }
+
+  args.push(
+    buildPagePath,
+    pagesDir,
+    route,
+    outDir,
+    basePath,
+    markdownClassName ?? "",
+    projectConfig ?? "",
+  );
 
   const command = new Deno.Command("deno", {
     args,
