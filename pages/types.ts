@@ -1,17 +1,16 @@
 import type { TabiApp } from "@tabirun/app";
 import type { DevServerHandle } from "../dev/server.ts";
-import type { z } from "zod";
-import type { PagesConfigSchema, SiteMetadataSchema } from "./config.ts";
+import type { PagesConfigInput, SiteMetadataConfig } from "./config.ts";
 
 /**
  * Site metadata configuration. When provided, enables sitemap.xml generation.
  */
-export type SiteMetadata = z.infer<typeof SiteMetadataSchema>;
+export type SiteMetadata = SiteMetadataConfig;
 
 /**
  * Configuration for the pages factory (input type for users).
  */
-export type PagesConfig = z.input<typeof PagesConfigSchema>;
+export type PagesConfig = PagesConfigInput;
 
 /**
  * Options for the dev server.

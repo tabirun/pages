@@ -39,12 +39,22 @@ import {
 export async function renderPage(
   options: RenderPageOptions,
 ): Promise<RenderPageResult> {
-  const { page, layouts, clientBundlePath, route, document, basePath = "" } =
-    options;
+  const {
+    page,
+    layouts,
+    clientBundlePath,
+    route,
+    document,
+    basePath = "",
+    markdownClassName,
+  } = options;
 
   try {
     // 1. Compose page with layouts into a component tree
-    const Tree = composeTree(page, layouts, basePath);
+    const Tree = composeTree(page, layouts, {
+      basePath,
+      markdownConfig: { wrapperClassName: markdownClassName },
+    });
 
     // 2. Render the tree to an HTML string
     const rawHtml = render(<Tree />);
@@ -59,7 +69,13 @@ export async function renderPage(
     );
 
     // 5. Serialize page data for client hydration
-    const dataScript = serializePageData(page, route, markdownCache, basePath);
+    const dataScript = serializePageData({
+      page,
+      route,
+      markdownCache,
+      basePath,
+      markdownClassName,
+    });
     const bundleScript =
       `<script type="module" src="${clientBundlePath}"></script>`;
 

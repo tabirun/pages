@@ -5,14 +5,16 @@ import { renderMarkdown } from "./renderer.ts";
 /**
  * Regex to match tabi-markdown markers with data-tabi-md wrapper.
  *
- * Matches: `<div data-tabi-md="id"><tabi-markdown>content</tabi-markdown></div>`
+ * Matches: `<div data-tabi-md="id" class="className"><tabi-markdown>content</tabi-markdown></div>`
+ * The class attribute is optional.
  *
  * Groups:
  * - 1: id (from data-tabi-md attribute)
- * - 2: markdown content
+ * - 2: class name (optional, may be undefined)
+ * - 3: markdown content
  */
 const MARKER_REGEX =
-  /<div data-tabi-md="([^"]+)"><tabi-markdown>([\s\S]*?)<\/tabi-markdown><\/div>/g;
+  /<div data-tabi-md="([^"]+)"(?: class="([^"]*)")?><tabi-markdown>([\s\S]*?)<\/tabi-markdown><\/div>/g;
 
 /**
  * Result of processing markdown markers.
@@ -53,17 +55,20 @@ export async function processMarkdownMarkers(
   // Process in reverse order to avoid index shifting
   for (const match of matches.reverse()) {
     const id = match[1];
-    const raw = unescapeHtml(match[2]);
+    const className = match[2];
+    const raw = unescapeHtml(match[3]);
     const rendered = await renderMarkdown(raw);
 
     // Add to cache
     cache.set(id, rendered);
 
     // Replace entire div with new div containing rendered content
+    // Preserve class attribute if present
+    const classAttr = className ? ` class="${className}"` : "";
     const start = match.index!;
     const end = start + match[0].length;
     result = result.slice(0, start) +
-      `<div data-tabi-md="${id}">${rendered}</div>` +
+      `<div data-tabi-md="${id}"${classAttr}>${rendered}</div>` +
       result.slice(end);
   }
 

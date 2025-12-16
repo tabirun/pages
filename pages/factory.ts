@@ -57,6 +57,7 @@ const DEFAULT_OUT_DIR = "./dist";
 export function pages(config: PagesConfig = {}): PagesInstance {
   const parsed = PagesConfigSchema.parse(config);
   const basePath = parsed.basePath;
+  const markdownClassName = parsed.markdown?.wrapperClassName;
 
   // Configure syntax highlighting theme if specified
   if (parsed.shikiTheme) {
@@ -65,7 +66,11 @@ export function pages(config: PagesConfig = {}): PagesInstance {
 
   async function dev(app: TabiApp, options: DevOptions = {}) {
     const pagesDir = resolve(options.pagesDir ?? DEFAULT_PAGES_DIR);
-    return await registerDevServer(app, { pagesDir, basePath });
+    return await registerDevServer(app, {
+      pagesDir,
+      basePath,
+      markdownClassName,
+    });
   }
 
   async function build(options: BuildOptions = {}): Promise<void> {
@@ -74,7 +79,7 @@ export function pages(config: PagesConfig = {}): PagesInstance {
     const sitemap = config.siteMetadata
       ? { baseUrl: config.siteMetadata.baseUrl }
       : undefined;
-    await buildSite({ pagesDir, outDir, sitemap, basePath });
+    await buildSite({ pagesDir, outDir, sitemap, basePath, markdownClassName });
   }
 
   function serve(app: TabiApp, options: ServeOptions = {}): void {

@@ -65,6 +65,8 @@ export interface RenderPageOptions {
   document?: ComponentType<DocumentProps>;
   /** Base path prefix for the site (e.g., "/docs"). Defaults to empty string. */
   basePath?: string;
+  /** CSS class name(s) to apply to markdown wrapper divs. */
+  markdownClassName?: string;
 }
 
 /**

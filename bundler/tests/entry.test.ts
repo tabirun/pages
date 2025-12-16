@@ -24,7 +24,7 @@ describe("generateClientEntry", () => {
       // Check imports
       expect(result).toContain('import { hydrate } from "preact";');
       expect(result).toContain(
-        `import { BasePathProvider, FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
+        `import { BasePathProvider, FrontmatterProvider, MarkdownConfigProvider } from "${PREACT_DIR}/context.tsx";`,
       );
       expect(result).toContain(
         `import { MarkdownCacheProvider } from "${PREACT_DIR}/markdown-cache.tsx";`,
@@ -61,18 +61,22 @@ describe("generateClientEntry", () => {
       expect(result).toContain("</MarkdownCacheProvider>");
       expect(result).toContain("</BasePathProvider>");
 
-      // Check nesting order: BasePathProvider > MarkdownCacheProvider > FrontmatterProvider
+      // Check nesting order: BasePathProvider > MarkdownConfigProvider > MarkdownCacheProvider > FrontmatterProvider
       const basePathOpen = result.indexOf("<BasePathProvider");
+      const configOpen = result.indexOf("<MarkdownConfigProvider");
       const cacheOpen = result.indexOf("<MarkdownCacheProvider");
       const frontmatterOpen = result.indexOf("<FrontmatterProvider");
       const frontmatterClose = result.indexOf("</FrontmatterProvider>");
       const cacheClose = result.indexOf("</MarkdownCacheProvider>");
+      const configClose = result.indexOf("</MarkdownConfigProvider>");
       const basePathClose = result.indexOf("</BasePathProvider>");
 
-      expect(basePathOpen).toBeLessThan(cacheOpen);
+      expect(basePathOpen).toBeLessThan(configOpen);
+      expect(configOpen).toBeLessThan(cacheOpen);
       expect(cacheOpen).toBeLessThan(frontmatterOpen);
       expect(frontmatterClose).toBeLessThan(cacheClose);
-      expect(cacheClose).toBeLessThan(basePathClose);
+      expect(cacheClose).toBeLessThan(configClose);
+      expect(configClose).toBeLessThan(basePathClose);
 
       // Check hydration
       expect(result).toContain(
@@ -180,7 +184,7 @@ describe("generateClientEntry", () => {
       // Check imports - should include Markdown and MarkdownCacheProvider
       expect(result).toContain('import { hydrate } from "preact";');
       expect(result).toContain(
-        `import { BasePathProvider, FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
+        `import { BasePathProvider, FrontmatterProvider, MarkdownConfigProvider } from "${PREACT_DIR}/context.tsx";`,
       );
       expect(result).toContain(
         `import { MarkdownCacheProvider } from "${PREACT_DIR}/markdown-cache.tsx";`,
@@ -332,7 +336,7 @@ describe("generateClientEntry", () => {
         'import Layout0 from "/project/pages/_layout.tsx"',
       );
       expect(result).toContain(
-        `import { BasePathProvider, FrontmatterProvider } from "${PREACT_DIR}/context.tsx"`,
+        `import { BasePathProvider, FrontmatterProvider, MarkdownConfigProvider } from "${PREACT_DIR}/context.tsx"`,
       );
       expect(result).toContain(
         `import { MarkdownCacheProvider } from "${PREACT_DIR}/markdown-cache.tsx"`,
@@ -453,7 +457,7 @@ describe("generateClientEntry", () => {
       const result = generateClientEntry(page, [], PREACT_DIR);
 
       expect(result).toContain(
-        `import { BasePathProvider, FrontmatterProvider } from "${PREACT_DIR}/context.tsx";`,
+        `import { BasePathProvider, FrontmatterProvider, MarkdownConfigProvider } from "${PREACT_DIR}/context.tsx";`,
       );
       expect(result).toContain(
         `import { Markdown } from "${PREACT_DIR}/markdown.tsx";`,

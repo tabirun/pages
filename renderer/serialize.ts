@@ -15,6 +15,8 @@ export interface SerializedPageData {
   markdownCache: Record<string, string>;
   /** Base path prefix for the site. */
   basePath: string;
+  /** CSS class name(s) for markdown wrapper divs. */
+  markdownClassName?: string;
 }
 
 /**
@@ -35,6 +37,22 @@ function escapeJsonForScript(json: string): string {
 }
 
 /**
+ * Options for serializing page data.
+ */
+export interface SerializePageDataOptions {
+  /** Loaded page containing frontmatter and type. */
+  page: LoadedPage;
+  /** Route path for the page. */
+  route: string;
+  /** Rendered markdown cache from processMarkdownMarkers. */
+  markdownCache: MarkdownCache;
+  /** Base path prefix for the site. */
+  basePath?: string;
+  /** CSS class name(s) for markdown wrapper divs. */
+  markdownClassName?: string;
+}
+
+/**
  * Serializes page data into a script tag for client hydration.
  *
  * The data is embedded as JSON in a script tag with type="application/json",
@@ -48,30 +66,36 @@ function escapeJsonForScript(json: string): string {
  *   `renderMarkdown()` which allows raw HTML passthrough. Only use with
  *   trusted markdown content.
  *
- * @param page - Loaded page containing frontmatter and type
- * @param route - Route path for the page
- * @param markdownCache - Rendered markdown cache from processMarkdownMarkers
- * @param basePath - Base path prefix for the site
+ * @param options - Serialization options
  * @returns Complete script tag string ready for HTML embedding
  *
  * @example
  * ```typescript
- * const script = serializePageData(page, "/blog/post", markdownCache, "/docs");
+ * const script = serializePageData({
+ *   page,
+ *   route: "/blog/post",
+ *   markdownCache,
+ *   basePath: "/docs",
+ * });
  * // Returns: <script id="__TABI_DATA__" type="application/json">{"frontmatter":...}</script>
  * ```
  */
-export function serializePageData(
-  page: LoadedPage,
-  route: string,
-  markdownCache: MarkdownCache,
-  basePath: string = "",
-): string {
+export function serializePageData(options: SerializePageDataOptions): string {
+  const {
+    page,
+    route,
+    markdownCache,
+    basePath = "",
+    markdownClassName,
+  } = options;
+
   const data: SerializedPageData = {
     frontmatter: page.frontmatter,
     route,
     pageType: page.type,
     markdownCache: Object.fromEntries(markdownCache),
     basePath,
+    markdownClassName,
   };
 
   const json = JSON.stringify(data);

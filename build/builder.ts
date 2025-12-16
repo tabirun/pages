@@ -53,7 +53,14 @@ export async function buildSite(
   options: BuildSiteOptions,
 ): Promise<BuildSiteResult> {
   const startTime = performance.now();
-  const { pagesDir, outDir, document, sitemap, basePath = "" } = options;
+  const {
+    pagesDir,
+    outDir,
+    document,
+    sitemap,
+    basePath = "",
+    markdownClassName,
+  } = options;
 
   // Validate paths
   validatePaths(options);
@@ -99,6 +106,7 @@ export async function buildSite(
         layoutCache,
         document: documentComponent,
         basePath,
+        markdownClassName,
       });
       results.push(result);
     }
@@ -114,6 +122,7 @@ export async function buildSite(
       outDir,
       document: documentComponent,
       basePath,
+      markdownClassName,
     });
     results.push(notFoundResult);
 
@@ -128,6 +137,7 @@ export async function buildSite(
       outDir,
       document: documentComponent,
       basePath,
+      markdownClassName,
     });
     results.push(errorResult);
 
@@ -217,14 +227,22 @@ interface BuildPageOptions {
   layoutCache: Map<string, LoadedLayout>;
   document?: ComponentType<DocumentProps>;
   basePath: string;
+  markdownClassName?: string;
 }
 
 /**
  * Build a single page.
  */
 async function buildPage(options: BuildPageOptions): Promise<BuildPageResult> {
-  const { pageEntry, pagesDir, outDir, layoutCache, document, basePath } =
-    options;
+  const {
+    pageEntry,
+    pagesDir,
+    outDir,
+    layoutCache,
+    document,
+    basePath,
+    markdownClassName,
+  } = options;
   const { route, filePath, layoutChain } = pageEntry;
 
   try {
@@ -253,6 +271,7 @@ async function buildPage(options: BuildPageOptions): Promise<BuildPageResult> {
       route,
       document,
       basePath,
+      markdownClassName,
     });
 
     // Write HTML file
@@ -297,6 +316,7 @@ interface BuildSystemPageOptions {
   outDir: string;
   document?: ComponentType<DocumentProps>;
   basePath: string;
+  markdownClassName?: string;
 }
 
 /**
@@ -317,6 +337,7 @@ async function buildSystemPage(
     outDir,
     document,
     basePath,
+    markdownClassName,
   } = options;
 
   try {
@@ -345,6 +366,7 @@ async function buildSystemPage(
       route,
       document,
       basePath,
+      markdownClassName,
     });
 
     // Write HTML file
