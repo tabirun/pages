@@ -338,16 +338,18 @@ async function handlePageRequest(
 }
 
 /**
- * Create an import map that merges the project's config with preact overrides.
- * This ensures user code uses the same preact version as @tabirun/pages
- * while preserving other project dependencies.
+ * Create a modified deno.json with preact overrides.
+ *
+ * Uses --config instead of --import-map because:
+ * - Import maps use pure string prefix matching
+ * - JSR subpath exports (e.g., @tabirun/pages/preact) don't resolve with import maps
+ * - --config respects JSR package exports while allowing import overrides
  */
-async function createMergedImportMap(
+async function createModifiedConfig(
   outDir: string,
-  projectConfig: string | null,
+  projectConfig: string,
 ): Promise<string> {
-  // Start with preact overrides - must match @tabirun/pages versions
-  // Note: trailing slash patterns don't work with npm specifiers, must map each subpath
+  // Preact overrides - must match @tabirun/pages versions
   const preactOverrides: Record<string, string> = {
     "preact": "npm:preact@^10.25.4",
     "preact/hooks": "npm:preact@^10.25.4/hooks",
@@ -357,25 +359,19 @@ async function createMergedImportMap(
     "preact-render-to-string": "npm:preact-render-to-string@^6.5.13",
   };
 
-  // Load project's import map if available
-  let projectImports: Record<string, string> = {};
-  if (projectConfig) {
-    try {
-      const configText = await Deno.readTextFile(projectConfig);
-      const config = JSON.parse(configText);
-      projectImports = config.imports ?? {};
-    } catch {
-      // Ignore errors reading config
-    }
-  }
+  // Load full project config
+  const configText = await Deno.readTextFile(projectConfig);
+  const config = JSON.parse(configText);
 
-  // Merge: project imports + preact overrides (preact takes precedence)
-  const mergedImports = { ...projectImports, ...preactOverrides };
+  // Override preact in imports (preact takes precedence)
+  config.imports = {
+    ...config.imports,
+    ...preactOverrides,
+  };
 
-  const importMap = { imports: mergedImports };
-  const importMapPath = join(outDir, "import-map.json");
-  await Deno.writeTextFile(importMapPath, JSON.stringify(importMap, null, 2));
-  return importMapPath;
+  const modifiedPath = join(outDir, "deno.json");
+  await Deno.writeTextFile(modifiedPath, JSON.stringify(config, null, 2));
+  return modifiedPath;
 }
 
 /**
@@ -420,16 +416,16 @@ async function buildPageSubprocess(
   // Find project config for UnoCSS import resolution
   const projectConfig = await findDenoConfig(pagesDir);
 
-  // Build args - only use import map when running from JSR
-  // Local files inherit parent's import map, but JSR needs explicit mapping
+  // Build args - only use modified config when running from JSR
+  // Local files inherit parent's config, but JSR needs explicit config
   const isRunningFromJsr = buildPageUrl.protocol === "https:";
   const args = ["run", "-A"];
 
   if (isRunningFromJsr && projectConfig) {
-    // Create merged import map: project deps + preact overrides
-    // This ensures user code uses the same preact version as @tabirun/pages
-    const importMapPath = await createMergedImportMap(outDir, projectConfig);
-    args.push(`--import-map=${importMapPath}`);
+    // Create modified config: full project config with preact overrides
+    // Uses --config instead of --import-map so JSR subpath exports resolve
+    const modifiedConfig = await createModifiedConfig(outDir, projectConfig);
+    args.push(`--config=${modifiedConfig}`);
   }
 
   args.push(
