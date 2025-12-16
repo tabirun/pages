@@ -121,7 +121,11 @@ export async function compileUnoCSS(
  */
 async function loadUnoConfig(configPath: string): Promise<UserConfig> {
   try {
-    const module = await import(configPath);
+    // Convert to file:// URL to ensure local file resolution when running from JSR
+    const configUrl = configPath.startsWith("/")
+      ? `file://${configPath}`
+      : configPath;
+    const module = await import(configUrl);
     return module.default ?? {};
   } catch (error) {
     // deno-coverage-ignore-start -- defensive handling for non-Error exceptions
