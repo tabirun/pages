@@ -376,18 +376,22 @@ async function buildPageSubprocess(
     ? buildPageUrl.pathname
     : buildPageUrl.href;
 
-  // Find project config for import map resolution
+  // Find project config for UnoCSS import resolution
   const projectConfig = await findDenoConfig(pagesDir);
 
-  // Build args, optionally with project config
-  const args = ["run", "-A"];
-  if (projectConfig) {
-    args.push(`--config=${projectConfig}`);
-  }
-  args.push(buildPagePath, pagesDir, route, outDir, basePath);
-  if (markdownClassName) {
-    args.push(markdownClassName);
-  }
+  // Build args - pass project config as argument, NOT as --config flag
+  // Using --config would cause preact version conflicts between user code and pages package
+  const args = [
+    "run",
+    "-A",
+    buildPagePath,
+    pagesDir,
+    route,
+    outDir,
+    basePath,
+    markdownClassName ?? "",
+    projectConfig ?? "",
+  ];
 
   const command = new Deno.Command("deno", {
     args,
