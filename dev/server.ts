@@ -338,6 +338,29 @@ async function handlePageRequest(
 }
 
 /**
+ * Find the nearest deno.json by walking up from a directory.
+ */
+async function findDenoConfig(startDir: string): Promise<string | null> {
+  let dir = startDir;
+  const root = "/";
+
+  while (dir !== root) {
+    const configPath = join(dir, "deno.json");
+    try {
+      const stat = await Deno.stat(configPath);
+      if (stat.isFile) {
+        return configPath;
+      }
+    } catch {
+      // File doesn't exist, try parent
+    }
+    dir = dirname(dir);
+  }
+
+  return null;
+}
+
+/**
  * Build a page in a subprocess to escape module caching.
  */
 async function buildPageSubprocess(
@@ -353,7 +376,15 @@ async function buildPageSubprocess(
     ? buildPageUrl.pathname
     : buildPageUrl.href;
 
-  const args = ["run", "-A", buildPagePath, pagesDir, route, outDir, basePath];
+  // Find project config for import map resolution
+  const projectConfig = await findDenoConfig(pagesDir);
+
+  // Build args, optionally with project config
+  const args = ["run", "-A"];
+  if (projectConfig) {
+    args.push(`--config=${projectConfig}`);
+  }
+  args.push(buildPagePath, pagesDir, route, outDir, basePath);
   if (markdownClassName) {
     args.push(markdownClassName);
   }

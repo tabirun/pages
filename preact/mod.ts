@@ -28,3 +28,4 @@ export { useBasePath, useFrontmatter } from "./context.tsx";
 export type { CodeProps } from "./code.tsx";
 export type { HeadProps } from "./head.tsx";
 export type { Frontmatter } from "./types.ts";
+export type { LayoutProps } from "../loaders/types.ts";
