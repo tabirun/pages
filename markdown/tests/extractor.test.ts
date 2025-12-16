@@ -132,6 +132,49 @@ describe("processMarkdownMarkers", () => {
     });
   });
 
+  describe("class attribute handling", () => {
+    it("should preserve class attribute on wrapper div", async () => {
+      const input =
+        '<div data-tabi-md=":r0:" class="prose"><tabi-markdown># Hello</tabi-markdown></div>';
+      const { html, cache } = await processMarkdownMarkers(input);
+
+      expect(html).toBe(
+        '<div data-tabi-md=":r0:" class="prose"><h1>Hello</h1>\n</div>',
+      );
+      expect(cache.get(":r0:")).toBe("<h1>Hello</h1>\n");
+    });
+
+    it("should preserve multi-word class attribute", async () => {
+      const input =
+        '<div data-tabi-md=":r0:" class="prose prose-lg dark:prose-invert"><tabi-markdown># Hello</tabi-markdown></div>';
+      const { html } = await processMarkdownMarkers(input);
+
+      expect(html).toBe(
+        '<div data-tabi-md=":r0:" class="prose prose-lg dark:prose-invert"><h1>Hello</h1>\n</div>',
+      );
+    });
+
+    it("should handle markers without class attribute", async () => {
+      const input =
+        '<div data-tabi-md=":r0:"><tabi-markdown># Hello</tabi-markdown></div>';
+      const { html } = await processMarkdownMarkers(input);
+
+      expect(html).toBe('<div data-tabi-md=":r0:"><h1>Hello</h1>\n</div>');
+    });
+
+    it("should handle mixed markers with and without class", async () => {
+      const input =
+        '<div data-tabi-md=":r0:" class="prose"><tabi-markdown># First</tabi-markdown></div>' +
+        '<div data-tabi-md=":r1:"><tabi-markdown># Second</tabi-markdown></div>';
+      const { html } = await processMarkdownMarkers(input);
+
+      expect(html).toBe(
+        '<div data-tabi-md=":r0:" class="prose"><h1>First</h1>\n</div>' +
+          '<div data-tabi-md=":r1:"><h1>Second</h1>\n</div>',
+      );
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle empty string", async () => {
       const { html, cache } = await processMarkdownMarkers("");

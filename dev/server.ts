@@ -24,6 +24,8 @@ export interface DevServerOptions {
   pagesDir?: string;
   /** Base path prefix for the site. */
   basePath?: string;
+  /** CSS class name(s) to apply to markdown wrapper divs. */
+  markdownClassName?: string;
 }
 
 /**
@@ -59,6 +61,7 @@ interface DevServerState {
   manifest: PageManifest;
   wsClients: Set<WebSocket>;
   watchHandle: WatchHandle | null;
+  markdownClassName?: string;
 }
 
 /**
@@ -89,6 +92,7 @@ export async function registerDevServer(
 ): Promise<DevServerHandle> {
   const pagesDir = resolve(options.pagesDir ?? "./pages");
   const basePath = options.basePath ?? "";
+  const markdownClassName = options.markdownClassName;
   const projectRoot = dirname(pagesDir);
   const publicDir = join(projectRoot, "public");
   const outDir = join(projectRoot, ".tabi");
@@ -114,6 +118,7 @@ export async function registerDevServer(
     manifest,
     wsClients: new Set(),
     watchHandle: null,
+    markdownClassName,
   };
 
   // Start file watcher
@@ -263,7 +268,7 @@ async function handlePageRequest(
   c: TabiContext,
   state: DevServerState,
 ): Promise<void> {
-  const { pagesDir, basePath, outDir, manifest } = state;
+  const { pagesDir, basePath, outDir, manifest, markdownClassName } = state;
 
   // Get route from request path
   let route = c.req.url.pathname;
@@ -287,6 +292,7 @@ async function handlePageRequest(
         "/_not-found",
         outDir,
         basePath,
+        markdownClassName,
       );
 
       if (result.success) {
@@ -305,7 +311,13 @@ async function handlePageRequest(
   }
 
   // Build page via subprocess
-  const result = await buildPageSubprocess(pagesDir, route, outDir, basePath);
+  const result = await buildPageSubprocess(
+    pagesDir,
+    route,
+    outDir,
+    basePath,
+    markdownClassName,
+  );
 
   if (!result.success) {
     const errorHtml = injectHmrScript(
@@ -333,6 +345,7 @@ async function buildPageSubprocess(
   route: string,
   outDir: string,
   basePath: string,
+  markdownClassName?: string,
 ): Promise<BuildOutput> {
   // Use full URL for remote (JSR), pathname for local files
   const buildPageUrl = new URL("./build-page.ts", import.meta.url);
@@ -340,8 +353,13 @@ async function buildPageSubprocess(
     ? buildPageUrl.pathname
     : buildPageUrl.href;
 
+  const args = ["run", "-A", buildPagePath, pagesDir, route, outDir, basePath];
+  if (markdownClassName) {
+    args.push(markdownClassName);
+  }
+
   const command = new Deno.Command("deno", {
-    args: ["run", "-A", buildPagePath, pagesDir, route, outDir, basePath],
+    args,
     stdout: "piped",
     stderr: "piped",
   });

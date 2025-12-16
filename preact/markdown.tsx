@@ -1,5 +1,6 @@
 import type { JSX } from "preact";
 import { useId } from "preact/hooks";
+import { useMarkdownConfig } from "./context.tsx";
 import { useMarkdownCache } from "./markdown-cache.tsx";
 import { escapeHtml } from "../utils/html.ts";
 
@@ -27,6 +28,7 @@ export function Markdown({ children = "" }: MarkdownProps): JSX.Element {
   const isServer = typeof window === "undefined";
   const id = useId();
   const cache = useMarkdownCache();
+  const { wrapperClassName } = useMarkdownConfig();
 
   // Server and client have different responsibilities:
   // - Server: Output marker for post-processing (cache doesn't exist yet)
@@ -38,7 +40,11 @@ export function Markdown({ children = "" }: MarkdownProps): JSX.Element {
   if (isServer) {
     const marker = `<tabi-markdown>${escapeHtml(children)}</tabi-markdown>`;
     return (
-      <div data-tabi-md={id} dangerouslySetInnerHTML={{ __html: marker }} />
+      <div
+        data-tabi-md={id}
+        class={wrapperClassName}
+        dangerouslySetInnerHTML={{ __html: marker }}
+      />
     );
   }
 
@@ -47,6 +53,7 @@ export function Markdown({ children = "" }: MarkdownProps): JSX.Element {
   return (
     <div
       data-tabi-md={id}
+      class={wrapperClassName}
       dangerouslySetInnerHTML={{ __html: preservedHtml }}
     />
   );

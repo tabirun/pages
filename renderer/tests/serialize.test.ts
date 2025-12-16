@@ -24,11 +24,11 @@ describe("serializePageData", () => {
         filePath: "/pages/blog/building-ssg.md",
       };
 
-      const result = serializePageData(
+      const result = serializePageData({
         page,
-        "/blog/building-ssg",
-        emptyCache(),
-      );
+        route: "/blog/building-ssg",
+        markdownCache: emptyCache(),
+      });
 
       // Verify script tag structure
       expect(result).toMatch(
@@ -71,7 +71,11 @@ describe("serializePageData", () => {
         filePath: "/pages/simple.md",
       };
 
-      const result = serializePageData(page, "/simple", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/simple",
+        markdownCache: emptyCache(),
+      });
 
       // Extract and parse JSON
       const jsonMatch = result.match(
@@ -103,7 +107,11 @@ describe("serializePageData", () => {
         filePath: "/pages/blog/post.md",
       };
 
-      const result = serializePageData(page, "/blog/post", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/blog/post",
+        markdownCache: emptyCache(),
+      });
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -134,7 +142,11 @@ describe("serializePageData", () => {
         filePath: "/pages/dashboard.tsx",
       };
 
-      const result = serializePageData(page, "/dashboard", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/dashboard",
+        markdownCache: emptyCache(),
+      });
 
       // Verify script tag structure
       expect(result).toMatch(
@@ -177,7 +189,11 @@ describe("serializePageData", () => {
         filePath: "/pages/security.md",
       };
 
-      const result = serializePageData(page, "/security", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/security",
+        markdownCache: emptyCache(),
+      });
 
       // Verify </script> is escaped with unicode and cannot break out
       expect(result).not.toContain("</script><script>alert('xss')</script>");
@@ -201,7 +217,11 @@ describe("serializePageData", () => {
         filePath: "/pages/html-chars.md",
       };
 
-      const result = serializePageData(page, "/html-chars", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/html-chars",
+        markdownCache: emptyCache(),
+      });
 
       // Verify angle brackets are escaped with unicode
       expect(result).toContain("\\u003c");
@@ -231,7 +251,11 @@ describe("serializePageData", () => {
         filePath: "/pages/johns-post.md",
       };
 
-      const result = serializePageData(page, "/johns-post", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/johns-post",
+        markdownCache: emptyCache(),
+      });
 
       // Single quotes don't need escaping in script tags
       const jsonMatch = result.match(
@@ -255,7 +279,11 @@ describe("serializePageData", () => {
         filePath: "/pages/injection.md",
       };
 
-      const result = serializePageData(page, "/injection", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/injection",
+        markdownCache: emptyCache(),
+      });
 
       // Extract and verify JSON is valid (JSON.stringify escapes quotes properly)
       const jsonMatch = result.match(
@@ -281,7 +309,11 @@ describe("serializePageData", () => {
         filePath: "/pages/test.md",
       };
 
-      const result = serializePageData(page, "/test", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/test",
+        markdownCache: emptyCache(),
+      });
 
       expect(result).toContain('id="__TABI_DATA__"');
     });
@@ -294,7 +326,11 @@ describe("serializePageData", () => {
         filePath: "/pages/test.md",
       };
 
-      const result = serializePageData(page, "/test", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/test",
+        markdownCache: emptyCache(),
+      });
 
       expect(result).toContain('type="application/json"');
     });
@@ -310,7 +346,11 @@ describe("serializePageData", () => {
         filePath: "/pages/test.md",
       };
 
-      const result = serializePageData(page, "/test", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/test",
+        markdownCache: emptyCache(),
+      });
 
       // Should not contain newlines
       expect(result).not.toContain("\n");
@@ -325,11 +365,11 @@ describe("serializePageData", () => {
         filePath: "/pages/blog/2024/article.md",
       };
 
-      const result = serializePageData(
+      const result = serializePageData({
         page,
-        "/blog/2024/article",
-        emptyCache(),
-      );
+        route: "/blog/2024/article",
+        markdownCache: emptyCache(),
+      });
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -355,7 +395,11 @@ describe("serializePageData", () => {
         filePath: "/pages/index.md",
       };
 
-      const result = serializePageData(page, "/", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/",
+        markdownCache: emptyCache(),
+      });
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -393,7 +437,11 @@ describe("serializePageData", () => {
         filePath: "/pages/advanced.md",
       };
 
-      const result = serializePageData(page, "/advanced", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/advanced",
+        markdownCache: emptyCache(),
+      });
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -424,7 +472,11 @@ describe("serializePageData", () => {
         filePath: "/pages/tech.md",
       };
 
-      const result = serializePageData(page, "/tech", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/tech",
+        markdownCache: emptyCache(),
+      });
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -456,7 +508,11 @@ describe("serializePageData", () => {
         filePath: "/pages/edge.md",
       };
 
-      const result = serializePageData(page, "/edge", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/edge",
+        markdownCache: emptyCache(),
+      });
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -489,7 +545,11 @@ describe("serializePageData", () => {
         filePath: "/pages/numbers.md",
       };
 
-      const result = serializePageData(page, "/numbers", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/numbers",
+        markdownCache: emptyCache(),
+      });
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -519,7 +579,11 @@ describe("serializePageData", () => {
         filePath: "/pages/test.md",
       };
 
-      const result = serializePageData(page, "/test", emptyCache());
+      const result = serializePageData({
+        page,
+        route: "/test",
+        markdownCache: emptyCache(),
+      });
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -547,7 +611,11 @@ describe("serializePageData", () => {
 
       const cache: MarkdownCache = new Map([[":r0:", "<h1>Hello</h1>\n"]]);
 
-      const result = serializePageData(page, "/test", cache);
+      const result = serializePageData({
+        page,
+        route: "/test",
+        markdownCache: cache,
+      });
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -579,7 +647,11 @@ describe("serializePageData", () => {
         [":r2:", "<pre><code>const x = 1;</code></pre>"],
       ]);
 
-      const result = serializePageData(page, "/test", cache);
+      const result = serializePageData({
+        page,
+        route: "/test",
+        markdownCache: cache,
+      });
 
       const jsonMatch = result.match(
         /^<script id="__TABI_DATA__" type="application\/json">(.*)<\/script>$/,
@@ -614,7 +686,11 @@ describe("serializePageData", () => {
         [":r0:", '<script>alert("xss")</script>'],
       ]);
 
-      const result = serializePageData(page, "/test", cache);
+      const result = serializePageData({
+        page,
+        route: "/test",
+        markdownCache: cache,
+      });
 
       // Script tags should be escaped with unicode
       expect(result).not.toContain('<script>alert("xss")</script>');

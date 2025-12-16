@@ -49,6 +49,12 @@ export interface BuildSiteOptions {
    * @example "/docs"
    */
   basePath?: string;
+  /**
+   * CSS class name(s) to apply to markdown wrapper divs (optional).
+   * Useful for applying typography styles (e.g., "prose" for Tailwind Typography).
+   * @example "prose prose-lg"
+   */
+  markdownClassName?: string;
 }
 
 /**

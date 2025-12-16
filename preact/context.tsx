@@ -7,6 +7,16 @@ const FrontmatterContext = createContext<Frontmatter | null>(null);
 const BasePathContext = createContext<string>("");
 
 /**
+ * Markdown rendering configuration.
+ */
+export interface MarkdownConfig {
+  /** CSS class name(s) to apply to the markdown wrapper div. */
+  wrapperClassName?: string;
+}
+
+const MarkdownConfigContext = createContext<MarkdownConfig>({});
+
+/**
  * Props for the FrontmatterProvider component.
  * @internal
  */
@@ -111,4 +121,46 @@ export function BasePathProvider({
  */
 export function useBasePath(): string {
   return useContext(BasePathContext);
+}
+
+/**
+ * Props for the MarkdownConfigProvider component.
+ * @internal
+ */
+export interface MarkdownConfigProviderProps {
+  /** Markdown configuration to provide to descendants. */
+  config: MarkdownConfig;
+  /** Child components that can access markdown config via useMarkdownConfig. */
+  children: ComponentChildren;
+}
+
+/**
+ * Provides markdown configuration to descendant components.
+ *
+ * @internal This provider is automatically injected by the framework during
+ * page rendering. Users should not need to use this directly - use the
+ * `useMarkdownConfig` hook instead.
+ */
+export function MarkdownConfigProvider({
+  config,
+  children,
+}: MarkdownConfigProviderProps): JSX.Element {
+  return (
+    <MarkdownConfigContext.Provider value={config}>
+      {children}
+    </MarkdownConfigContext.Provider>
+  );
+}
+
+/**
+ * Hook to access markdown configuration from context.
+ *
+ * Returns the markdown config set in pages configuration.
+ * Returns empty object if no config is set.
+ *
+ * @returns The markdown configuration object.
+ * @internal
+ */
+export function useMarkdownConfig(): MarkdownConfig {
+  return useContext(MarkdownConfigContext);
 }

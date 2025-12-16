@@ -1,33 +1,50 @@
 import type { ComponentType, JSX } from "preact";
 import type { LoadedLayout, LoadedPage } from "../loaders/types.ts";
-import { BasePathProvider, FrontmatterProvider } from "../preact/context.tsx";
+import {
+  BasePathProvider,
+  FrontmatterProvider,
+  type MarkdownConfig,
+  MarkdownConfigProvider,
+} from "../preact/context.tsx";
 import { Markdown } from "../preact/markdown.tsx";
+
+/**
+ * Options for composing a page tree.
+ */
+export interface ComposeTreeOptions {
+  /** Base path prefix for the site. */
+  basePath?: string;
+  /** Markdown rendering configuration. */
+  markdownConfig?: MarkdownConfig;
+}
 
 /**
  * Composes a page with its layout chain into a renderable component tree.
  *
  * The composition wraps the page content in layouts from innermost to outermost,
- * then wraps everything in context providers for frontmatter and basePath access.
+ * then wraps everything in context providers for frontmatter, basePath, and
+ * markdown config access.
  *
  * For markdown pages, the content is wrapped in a Markdown component which
  * renders a marker for post-processing by processMarkdownMarkers().
  *
  * @param page - Loaded page (markdown or TSX)
  * @param layouts - Layout chain from root to innermost
- * @param basePath - Base path prefix for the site
+ * @param options - Composition options
  * @returns A component that renders the complete tree
  *
  * @example
  * ```typescript
- * const Tree = composeTree(page, [rootLayout, blogLayout], "/docs");
+ * const Tree = composeTree(page, [rootLayout, blogLayout], { basePath: "/docs" });
  * const html = render(<Tree />);
  * ```
  */
 export function composeTree(
   page: LoadedPage,
   layouts: LoadedLayout[],
-  basePath: string = "",
+  options: ComposeTreeOptions = {},
 ): ComponentType {
+  const { basePath = "", markdownConfig = {} } = options;
   // Build page content - either TSX component or markdown wrapped in Markdown
   let content: JSX.Element;
   if (page.type === "tsx") {
@@ -50,9 +67,11 @@ export function composeTree(
   return function ComposedTree(): JSX.Element {
     return (
       <BasePathProvider basePath={basePath}>
-        <FrontmatterProvider frontmatter={frontmatter}>
-          {content}
-        </FrontmatterProvider>
+        <MarkdownConfigProvider config={markdownConfig}>
+          <FrontmatterProvider frontmatter={frontmatter}>
+            {content}
+          </FrontmatterProvider>
+        </MarkdownConfigProvider>
       </BasePathProvider>
     );
   };

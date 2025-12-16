@@ -1,6 +1,7 @@
 import { afterEach, describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { render } from "preact-render-to-string";
+import { MarkdownConfigProvider } from "../context.tsx";
 import { Markdown } from "../markdown.tsx";
 import { MarkdownCacheProvider } from "../markdown-cache.tsx";
 
@@ -112,6 +113,61 @@ const x = 1;
 
       // Falls back to empty content when no cache provider
       expect(html).toMatch(/^<div data-tabi-md="[^"]+"><\/div>$/);
+    });
+  });
+
+  describe("wrapperClassName", () => {
+    it("should apply wrapperClassName from context on server", () => {
+      const html = render(
+        <MarkdownConfigProvider config={{ wrapperClassName: "prose" }}>
+          <Markdown># Hello</Markdown>
+        </MarkdownConfigProvider>,
+      );
+
+      expect(html).toContain('class="prose"');
+      expect(html).toMatch(/<div data-tabi-md="[^"]+" class="prose">/);
+    });
+
+    it("should apply multi-word wrapperClassName from context", () => {
+      const html = render(
+        <MarkdownConfigProvider
+          config={{ wrapperClassName: "prose prose-lg dark:prose-invert" }}
+        >
+          <Markdown># Hello</Markdown>
+        </MarkdownConfigProvider>,
+      );
+
+      expect(html).toContain('class="prose prose-lg dark:prose-invert"');
+    });
+
+    it("should not add class attribute when wrapperClassName is undefined", () => {
+      const html = render(
+        <MarkdownConfigProvider config={{}}>
+          <Markdown># Hello</Markdown>
+        </MarkdownConfigProvider>,
+      );
+
+      expect(html).not.toContain("class=");
+    });
+
+    it("should apply wrapperClassName on client", () => {
+      // Simulate client environment
+      (globalThis as Record<string, unknown>).window = {};
+
+      const cacheData = { "P0-0": "<p>content</p>" };
+
+      const html = render(
+        <MarkdownConfigProvider config={{ wrapperClassName: "prose" }}>
+          <MarkdownCacheProvider initialData={cacheData}>
+            <Markdown># Hello</Markdown>
+          </MarkdownCacheProvider>
+        </MarkdownConfigProvider>,
+      );
+
+      expect(html).toContain('class="prose"');
+
+      // Cleanup
+      delete (globalThis as Record<string, unknown>).window;
     });
   });
 });

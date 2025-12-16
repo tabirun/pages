@@ -17,15 +17,33 @@ export const SiteMetadataSchema: z.ZodObject<{ baseUrl: z.ZodString }> = z
 const BASE_PATH_REGEX = /^(\/[a-z0-9_-]+)*$/;
 
 /**
+ * Schema for markdown rendering options.
+ */
+export const MarkdownOptionsSchema = z.object({
+  /**
+   * CSS class name(s) to apply to the markdown wrapper div.
+   * Useful for applying typography styles (e.g., "prose" for Tailwind Typography).
+   * @example "prose prose-lg"
+   */
+  wrapperClassName: z.string().optional(),
+});
+
+/**
  * Schema for pages factory configuration.
  */
 export const PagesConfigSchema: z.ZodType<
-  { basePath: string; shikiTheme?: string; siteMetadata?: { baseUrl: string } },
+  {
+    basePath: string;
+    shikiTheme?: string;
+    siteMetadata?: { baseUrl: string };
+    markdown?: { wrapperClassName?: string };
+  },
   z.ZodTypeDef,
   {
     basePath?: string;
     shikiTheme?: string;
     siteMetadata?: { baseUrl: string };
+    markdown?: { wrapperClassName?: string };
   }
 > = z.object({
   /**
@@ -51,4 +69,21 @@ export const PagesConfigSchema: z.ZodType<
   shikiTheme: z.string().optional(),
   /** Site metadata - required for sitemap.xml generation. */
   siteMetadata: SiteMetadataSchema.optional(),
+  /** Markdown rendering options. */
+  markdown: MarkdownOptionsSchema.optional(),
 });
+
+/**
+ * Site metadata configuration type.
+ */
+export type SiteMetadataConfig = z.infer<typeof SiteMetadataSchema>;
+
+/**
+ * Markdown options type.
+ */
+export type MarkdownOptionsConfig = z.infer<typeof MarkdownOptionsSchema>;
+
+/**
+ * Pages configuration input type (what users pass in).
+ */
+export type PagesConfigInput = z.input<typeof PagesConfigSchema>;

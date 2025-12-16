@@ -13,6 +13,7 @@ import { pages } from "@tabirun/pages";
 ```typescript
 const { dev, build, serve } = pages({
   siteMetadata: { baseUrl: "https://example.com" },
+  markdown: { wrapperClassName: "prose" },
 });
 
 // Development server with hot reload (returns handle for cleanup)
@@ -30,10 +31,18 @@ serve(app, { dir: "./dist" });
 
 ### PagesConfig
 
-| Option         | Type           | Description                                          |
-| -------------- | -------------- | ---------------------------------------------------- |
-| `shikiTheme`   | `string`       | Shiki theme for code blocks (default: "github-dark") |
-| `siteMetadata` | `SiteMetadata` | Enables sitemap.xml generation                       |
+| Option         | Type              | Description                                          |
+| -------------- | ----------------- | ---------------------------------------------------- |
+| `basePath`     | `string`          | URL prefix for all routes (e.g., "/docs")            |
+| `shikiTheme`   | `string`          | Shiki theme for code blocks (default: "github-dark") |
+| `siteMetadata` | `SiteMetadata`    | Enables sitemap.xml generation                       |
+| `markdown`     | `MarkdownOptions` | Markdown rendering options                           |
+
+### MarkdownOptions
+
+| Option             | Type     | Description                                                 |
+| ------------------ | -------- | ----------------------------------------------------------- |
+| `wrapperClassName` | `string` | CSS class(es) for markdown wrapper (e.g., "prose prose-lg") |
 
 ### SiteMetadata
 
