@@ -26,5 +26,7 @@ export { Head } from "./head.tsx";
 export { useBasePath, useFrontmatter } from "./context.tsx";
 
 export type { CodeProps } from "./code.tsx";
+export type { DocumentProps } from "../renderer/types.ts";
 export type { HeadProps } from "./head.tsx";
 export type { Frontmatter } from "./types.ts";
+export type { LayoutProps } from "../loaders/types.ts";
