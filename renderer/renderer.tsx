@@ -1,5 +1,10 @@
 import { render } from "preact-render-to-string";
 import { processMarkdownMarkers } from "../markdown/extractor.ts";
+import {
+  BasePathProvider,
+  FrontmatterProvider,
+  MarkdownConfigProvider,
+} from "../preact/context.tsx";
 import { processHeadMarkers } from "../preact/head-extractor.ts";
 import { composeTree } from "./compose.tsx";
 import { DefaultDocument } from "./document.tsx";
@@ -91,10 +96,19 @@ export async function renderPage(
       </>
     );
 
-    // 7. Render the document shell (head content injected via string replacement)
+    // 7. Render the document shell with context providers
+    // Document may use hooks like useFrontmatter(), so wrap in providers
     const Document = document ?? DefaultDocument;
     const documentHtml = render(
-      <Document head={null}>{bodyContent}</Document>,
+      <BasePathProvider basePath={basePath}>
+        <MarkdownConfigProvider
+          config={{ wrapperClassName: markdownClassName }}
+        >
+          <FrontmatterProvider frontmatter={page.frontmatter}>
+            <Document head={null}>{bodyContent}</Document>
+          </FrontmatterProvider>
+        </MarkdownConfigProvider>
+      </BasePathProvider>,
     );
 
     // 8. Inject head content before </head> (string manipulation for raw HTML)
