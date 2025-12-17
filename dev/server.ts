@@ -338,43 +338,6 @@ async function handlePageRequest(
 }
 
 /**
- * Create a modified deno.json with preact overrides.
- *
- * Uses --config instead of --import-map because:
- * - Import maps use pure string prefix matching
- * - JSR subpath exports (e.g., @tabirun/pages/preact) don't resolve with import maps
- * - --config respects JSR package exports while allowing import overrides
- */
-async function createModifiedConfig(
-  outDir: string,
-  projectConfig: string,
-): Promise<string> {
-  // Preact overrides - must match @tabirun/pages versions
-  const preactOverrides: Record<string, string> = {
-    "preact": "npm:preact@^10.25.4",
-    "preact/hooks": "npm:preact@^10.25.4/hooks",
-    "preact/jsx-runtime": "npm:preact@^10.25.4/jsx-runtime",
-    "preact/jsx-dev-runtime": "npm:preact@^10.25.4/jsx-dev-runtime",
-    "preact/compat": "npm:preact@^10.25.4/compat",
-    "preact-render-to-string": "npm:preact-render-to-string@^6.5.13",
-  };
-
-  // Load full project config
-  const configText = await Deno.readTextFile(projectConfig);
-  const config = JSON.parse(configText);
-
-  // Override preact in imports (preact takes precedence)
-  config.imports = {
-    ...config.imports,
-    ...preactOverrides,
-  };
-
-  const modifiedPath = join(outDir, "deno.json");
-  await Deno.writeTextFile(modifiedPath, JSON.stringify(config, null, 2));
-  return modifiedPath;
-}
-
-/**
  * Find the nearest deno.json by walking up from a directory.
  */
 async function findDenoConfig(startDir: string): Promise<string | null> {
@@ -422,10 +385,8 @@ async function buildPageSubprocess(
   const args = ["run", "-A"];
 
   if (isRunningFromJsr && projectConfig) {
-    // Create modified config: full project config with preact overrides
-    // Uses --config instead of --import-map so JSR subpath exports resolve
-    const modifiedConfig = await createModifiedConfig(outDir, projectConfig);
-    args.push(`--config=${modifiedConfig}`);
+    // Pass project config so subprocess can resolve imports
+    args.push(`--config=${projectConfig}`);
   }
 
   args.push(
