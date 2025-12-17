@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useState } from "@tabirun/pages/preact";
 
 export const frontmatter = {
   title: "Markdown + TSX Example",

@@ -21,7 +21,7 @@
 ## Quick Start
 
 ```bash
-deno add jsr:@tabirun/app jsr:@tabirun/pages npm:preact npm:preact-render-to-string
+deno add jsr:@tabirun/app jsr:@tabirun/pages
 ```
 
 Add to `deno.json`:
@@ -30,7 +30,7 @@ Add to `deno.json`:
 {
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "preact"
+    "jsxImportSource": "@tabirun/pages/preact"
   }
 }
 ```

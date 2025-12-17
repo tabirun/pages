@@ -21,8 +21,10 @@ describe("generateClientEntry", () => {
 
       const result = generateClientEntry(page, [], PREACT_DIR);
 
-      // Check imports
-      expect(result).toContain('import { hydrate } from "preact";');
+      // Check imports - hydrate comes from our Preact re-export
+      expect(result).toContain(
+        `import { hydrate } from "${PREACT_DIR}/mod.ts";`,
+      );
       expect(result).toContain(
         `import { BasePathProvider, FrontmatterProvider, MarkdownConfigProvider } from "${PREACT_DIR}/context.tsx";`,
       );
@@ -182,7 +184,9 @@ describe("generateClientEntry", () => {
       const result = generateClientEntry(page, [], PREACT_DIR);
 
       // Check imports - should include Markdown and MarkdownCacheProvider
-      expect(result).toContain('import { hydrate } from "preact";');
+      expect(result).toContain(
+        `import { hydrate } from "${PREACT_DIR}/mod.ts";`,
+      );
       expect(result).toContain(
         `import { BasePathProvider, FrontmatterProvider, MarkdownConfigProvider } from "${PREACT_DIR}/context.tsx";`,
       );

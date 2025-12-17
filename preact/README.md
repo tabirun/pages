@@ -1,14 +1,75 @@
 # preact
 
-Preact components and hooks for pages.
+Preact components, hooks, and re-exports for Tabi Pages.
 
-## Installation
+## Important: Preact Imports
 
-```typescript
-import { Code, useFrontmatter } from "@tabirun/pages/preact";
+**Always import Preact APIs from `@tabirun/pages/preact`**, not directly from
+`preact`. This ensures all code uses the same Preact instance, preventing
+version mismatch issues that cause hooks and context to fail.
+
+```tsx
+// Correct - use @tabirun/pages/preact
+import { Head, useEffect, useState } from "@tabirun/pages/preact";
+
+// Wrong - causes version mismatch errors
+import { useState } from "preact/hooks";
 ```
 
-## Components
+## JSX Configuration
+
+Configure your `deno.json`:
+
+```json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@tabirun/pages/preact"
+  }
+}
+```
+
+## Re-exports
+
+This module re-exports all commonly used Preact APIs:
+
+### Core
+
+- `h`, `createElement`, `Fragment`, `render`, `hydrate`
+- `createContext`, `createRef`, `cloneElement`
+- `Component`, `isValidElement`, `toChildArray`, `options`
+
+### Hooks
+
+- `useState`, `useEffect`, `useContext`, `useReducer`
+- `useRef`, `useMemo`, `useCallback`
+- `useLayoutEffect`, `useImperativeHandle`, `useDebugValue`
+- `useErrorBoundary`, `useId`
+
+### SSR
+
+- `renderToString`, `renderToStringAsync`
+
+### Types
+
+- `ComponentChildren`, `ComponentType`, `ComponentChild`
+- `ComponentClass`, `FunctionComponent`, `VNode`
+- `JSX`, `RefObject`, `RefCallback`, `RenderableProps`
+
+## Tabi Components
+
+### Head
+
+Add elements to the document `<head>`.
+
+```tsx
+import { Head } from "@tabirun/pages/preact";
+
+<Head>
+  <title>My Page</title>
+  <meta name="description" content="Page description" />
+</Head>;
+```
 
 ### Code
 
@@ -17,9 +78,7 @@ Syntax-highlighted code blocks using Shiki.
 ```tsx
 import { Code } from "@tabirun/pages/preact";
 
-<Code lang="typescript">
-  const greeting = "Hello";
-</Code>;
+<Code lang="typescript">const greeting = "Hello";</Code>;
 ```
 
 | Prop       | Type     | Description               |
@@ -27,7 +86,7 @@ import { Code } from "@tabirun/pages/preact";
 | `lang`     | `string` | Language for highlighting |
 | `children` | `string` | Code content              |
 
-## Hooks
+## Tabi Hooks
 
 ### useFrontmatter
 
@@ -42,18 +101,50 @@ function Title() {
 }
 ```
 
-## Types
+### useBasePath
 
-```typescript
-interface Frontmatter {
-  title?: string;
-  description?: string;
-  [key: string]: unknown;
+Access the configured base path.
+
+```tsx
+import { useBasePath } from "@tabirun/pages/preact";
+
+function NavLink() {
+  const basePath = useBasePath();
+  return <a href={`${basePath}/about`}>About</a>;
 }
+```
 
-interface CodeProps {
-  lang?: string;
-  children?: string;
+## Example
+
+```tsx
+import {
+  Head,
+  useEffect,
+  useFrontmatter,
+  useState,
+} from "@tabirun/pages/preact";
+
+export const frontmatter = {
+  title: "Counter",
+};
+
+export default function CounterPage() {
+  const { title } = useFrontmatter();
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    document.title = `${title} - ${count}`;
+  }, [title, count]);
+
+  return (
+    <>
+      <Head>
+        <title>{title}</title>
+      </Head>
+      <h1>{title}</h1>
+      <button onClick={() => setCount((c) => c + 1)}>Count: {count}</button>
+    </>
+  );
 }
 ```
 
