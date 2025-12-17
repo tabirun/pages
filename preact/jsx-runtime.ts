@@ -18,3 +18,4 @@
  */
 
 export { Fragment, jsx, jsxDEV, jsxs } from "preact/jsx-runtime";
+export type { JSX } from "preact/jsx-runtime";
