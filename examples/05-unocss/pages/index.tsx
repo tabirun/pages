@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useState } from "@tabirun/pages/preact";
 
 export default function HomePage() {
   const [count, setCount] = useState(0);

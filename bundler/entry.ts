@@ -33,8 +33,10 @@ export function generateClientEntry(
 ): string {
   const lines: string[] = [];
 
-  // Import hydrate from Preact
-  lines.push('import { hydrate } from "preact";');
+  // Import hydrate from our Preact re-export to ensure single instance
+  lines.push(
+    `import { hydrate } from "${escapePathForJs(preactDir)}/mod.ts";`,
+  );
 
   // Import from framework preact modules (direct file imports)
   lines.push(

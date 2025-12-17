@@ -77,7 +77,7 @@ export async function bundleClient(
       format: "esm",
       target: "es2020",
       jsx: "automatic",
-      jsxImportSource: "preact",
+      jsxImportSource: "@tabirun/pages/preact",
       minify: mode === "production",
       sourcemap: mode === "development" ? "inline" : false,
       write: false,

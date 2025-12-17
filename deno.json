@@ -1,6 +1,6 @@
 {
   "name": "@tabirun/pages",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "license": "MIT",
   "nodeModulesDir": "auto",
   "compilerOptions": {
@@ -29,7 +29,10 @@
   },
   "exports": {
     ".": "./pages/mod.ts",
-    "./preact": "./preact/mod.ts"
+    "./preact": "./preact/mod.ts",
+    "./preact/jsx-runtime": "./preact/jsx-runtime.ts",
+    "./preact/jsx-dev-runtime": "./preact/jsx-dev-runtime.ts",
+    "./preact/hooks": "./preact/hooks.ts"
   },
   "tasks": {
     "test": "deno test --allow-all --clean --coverage=coverage && deno coverage coverage --exclude='.*/tests/fixtures/.*'",
@@ -45,6 +48,11 @@
     "exclude": ["**/.tabi/**"]
   },
   "imports": {
+    "@tabirun/pages": "./pages/mod.ts",
+    "@tabirun/pages/preact": "./preact/mod.ts",
+    "@tabirun/pages/preact/hooks": "./preact/hooks.ts",
+    "@tabirun/pages/preact/jsx-runtime": "./preact/jsx-runtime.ts",
+    "@tabirun/pages/preact/jsx-dev-runtime": "./preact/jsx-dev-runtime.ts",
     "@std/async": "jsr:@std/async@^1.0.10",
     "@std/crypto": "jsr:@std/crypto@^1.0.5",
     "@std/encoding": "jsr:@std/encoding@^1.0.9",
