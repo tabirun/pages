@@ -592,6 +592,49 @@ describe("renderPage", () => {
       expect(result.html).toContain("<title>Custom Title</title>");
     });
 
+    it("should provide context to custom document using useFrontmatter", async () => {
+      function DocumentWithFrontmatter({ head, children }: DocumentProps) {
+        const { title, description } = useFrontmatter();
+        return (
+          <html>
+            <head>
+              <title>Site | {title}</title>
+              <meta name="description" content={description as string} />
+              {head}
+            </head>
+            <body>{children}</body>
+          </html>
+        );
+      }
+
+      function SimplePage() {
+        return <div>Page content</div>;
+      }
+
+      const page: LoadedTsxPage = {
+        type: "tsx",
+        frontmatter: {
+          title: "My Page Title",
+          description: "My page description",
+        },
+        component: SimplePage,
+        filePath: "/pages/page.tsx",
+      };
+
+      const result = await renderPage({
+        page,
+        layouts: [],
+        clientBundlePath: "/_tabi/page.js",
+        route: "/page",
+        document: DocumentWithFrontmatter,
+      });
+
+      expect(result.html).toContain("<title>Site | My Page Title</title>");
+      expect(result.html).toContain(
+        '<meta name="description" content="My page description"',
+      );
+    });
+
     it("should handle custom document without head closing tag", async () => {
       // This is an unusual edge case - a document that doesn't have a proper </head>
       // The renderer gracefully falls back to not injecting head content
