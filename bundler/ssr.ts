@@ -116,14 +116,22 @@ export async function bundleSSR(
     format: "esm",
     target: "es2020",
     jsx: "automatic",
-    jsxImportSource: "preact",
+    jsxImportSource: "@tabirun/pages/preact",
     minify: false,
     sourcemap: false,
     write: false,
     plugins: [...denoPlugins(hasConfig ? { configPath } : {})],
-    // Note: preact is bundled (not external) because the temp bundle file
-    // is outside the project's import map context and can't resolve preact.
-    // This is fine for SSR since we're just rendering to string.
+    // Mark preact as external so SSR bundle uses same instance as renderer.
+    // This works because the bundle is imported from within the project
+    // directory, so Deno resolves @tabirun/pages/preact via the project's
+    // import map.
+    external: [
+      "@tabirun/pages/preact",
+      "@tabirun/pages/preact/*",
+      "preact",
+      "preact/*",
+      "preact-render-to-string",
+    ],
   });
 
   try {
