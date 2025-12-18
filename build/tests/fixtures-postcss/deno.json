@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
+  "imports": {
+    "@tabirun/pages": "../../../pages/mod.ts",
+    "@tabirun/pages/preact": "../../../preact/mod.ts",
+    "@tabirun/pages/preact/hooks": "../../../preact/hooks.ts",
+    "@tabirun/pages/preact/jsx-runtime": "../../../preact/jsx-runtime.ts",
+    "@tabirun/pages/preact/jsx-dev-runtime": "../../../preact/jsx-dev-runtime.ts",
+    "postcss": "npm:postcss@8.4.49",
+    "preact": "npm:preact@^10.25.4",
+    "preact/hooks": "npm:preact@^10.25.4/hooks",
+    "preact-render-to-string": "npm:preact-render-to-string@^6.5.13"
+  }
+}
