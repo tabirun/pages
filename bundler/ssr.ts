@@ -121,8 +121,9 @@ export async function bundleSSR(
     sourcemap: false,
     write: false,
     plugins: [...denoPlugins(hasConfig ? { configPath } : {})],
-    // Mark preact as external - we want the same instance as parent
-    external: ["preact", "preact/*", "preact-render-to-string"],
+    // Note: preact is bundled (not external) because the temp bundle file
+    // is outside the project's import map context and can't resolve preact.
+    // This is fine for SSR since we're just rendering to string.
   });
 
   try {
