@@ -196,11 +196,14 @@ function validatePaths(options: BundleClientOptions): void {
 }
 
 /**
- * Stop the esbuild service.
+ * Stop the esbuild service and wait for cleanup.
  * Call this when you're done bundling to release resources.
  *
  * @returns Promise that resolves when esbuild is stopped
  */
-export function stopEsbuild(): Promise<void> {
-  return esbuild.stop();
+export async function stopEsbuild(): Promise<void> {
+  await esbuild.stop();
+  // Small delay to ensure child process has fully terminated
+  // This helps prevent race conditions in test cleanup
+  await new Promise((resolve) => setTimeout(resolve, 50));
 }
