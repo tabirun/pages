@@ -1,21 +1,18 @@
-import { createGenerator } from "@unocss/core";
-import type { UserConfig } from "@unocss/core";
 import { join } from "@std/path";
 import { generateContentHash } from "../build/assets.ts";
-import { scanSourceContent } from "../scanner/source-scanner.ts";
 import { BuildError } from "../build/types.ts";
 
 /** Directory for generated CSS within output directory. */
 const STYLES_DIR = "__styles";
 
 /**
- * Options for UnoCSS compilation.
+ * Options for CSS compilation.
  */
-export interface UnoCompileOptions {
-  /** Path to uno.config.ts file. */
+export interface CSSCompileOptions {
+  /** Path to CSS entry file. */
+  entryPath: string;
+  /** Path to postcss.config.ts file. */
   configPath: string;
-  /** Project root directory (for scanning). */
-  projectRoot: string;
   /** Output directory for built files. */
   outDir: string;
   /**
@@ -26,17 +23,16 @@ export interface UnoCompileOptions {
   basePath?: string;
   /**
    * Path to project's deno.json (optional).
-   * When provided in dev mode, runs UnoCSS compilation in a subprocess
-   * with --config to resolve project dependencies without affecting
-   * preact version resolution.
+   * When provided, runs PostCSS compilation in a subprocess
+   * with --config to resolve project dependencies.
    */
   projectConfig?: string;
 }
 
 /**
- * Result of UnoCSS compilation.
+ * Result of CSS compilation.
  */
-export interface UnoCompileResult {
+export interface CSSCompileResult {
   /** Generated CSS content. */
   css: string;
   /** Path where CSS was written. */
@@ -46,10 +42,11 @@ export interface UnoCompileResult {
 }
 
 /**
- * Compile UnoCSS from project source files.
+ * Compile CSS using PostCSS from entry file.
  *
- * Scans all source files for class usage, generates CSS,
- * and writes to output directory with content hash.
+ * Processes the entry CSS file through PostCSS using the project's
+ * postcss.config.ts, then writes output to the output directory with
+ * content hash.
  *
  * @param options - Compilation options
  * @returns Compilation result with CSS and output paths
@@ -57,34 +54,27 @@ export interface UnoCompileResult {
  *
  * @example
  * ```typescript
- * const result = await compileUnoCSS({
- *   configPath: "/project/uno.config.ts",
- *   projectRoot: "/project",
+ * const result = await compileCSS({
+ *   entryPath: "/project/styles/index.css",
+ *   configPath: "/project/postcss.config.ts",
  *   outDir: "/project/dist",
  * });
  * // result.publicPath might be "/__styles/A1B2C3D4.css"
  * ```
  */
-export async function compileUnoCSS(
-  options: UnoCompileOptions,
-): Promise<UnoCompileResult> {
-  const { configPath, projectRoot, outDir, basePath = "", projectConfig } =
+export async function compileCSS(
+  options: CSSCompileOptions,
+): Promise<CSSCompileResult> {
+  const { entryPath, configPath, outDir, basePath = "", projectConfig } =
     options;
 
   try {
-    // Generate CSS - use subprocess if projectConfig provided (dev mode)
-    // to avoid preact version conflicts while still resolving project deps
-    let css: string;
-    if (projectConfig) {
-      css = await compileInSubprocess(configPath, projectRoot, projectConfig);
-    } else {
-      // Direct compilation (production build runs in project context)
-      const config = await loadUnoConfig(configPath);
-      const generator = await createGenerator(config);
-      const sourceContent = await scanSourceContent(projectRoot);
-      const result = await generator.generate(sourceContent);
-      css = result.css ?? "";
-    }
+    // Generate CSS via subprocess to use project's PostCSS plugins
+    const css = await compileInSubprocess(
+      entryPath,
+      configPath,
+      projectConfig,
+    );
 
     // If no CSS generated, return empty result
     if (!css || css.trim().length === 0) {
@@ -116,7 +106,7 @@ export async function compileUnoCSS(
     }
     // deno-coverage-ignore-start -- defensive handling for non-Error exceptions
     throw new BuildError(
-      `UnoCSS compilation failed: ${
+      `CSS compilation failed: ${
         error instanceof Error ? error.message : String(error)
       }`,
       undefined,
@@ -127,29 +117,34 @@ export async function compileUnoCSS(
 }
 
 /**
- * Compile UnoCSS in a subprocess with project's import map.
- * This allows resolving project dependencies (like presets) without
- * affecting preact version resolution in the main process.
+ * Compile CSS in a subprocess with project's import map.
+ * This allows resolving project dependencies (PostCSS plugins) without
+ * affecting other dependency resolution in the main process.
  */
 async function compileInSubprocess(
+  entryPath: string,
   configPath: string,
-  projectRoot: string,
-  projectConfig: string,
+  projectConfig?: string,
 ): Promise<string> {
-  const subprocessUrl = new URL("./compile-subprocess.ts", import.meta.url);
+  const subprocessUrl = new URL("./subprocess.ts", import.meta.url);
   const subprocessPath = subprocessUrl.protocol === "file:"
     ? subprocessUrl.pathname
     : subprocessUrl.href;
 
+  const args = [
+    "run",
+    "-A",
+  ];
+
+  // Use project config if provided for dependency resolution
+  if (projectConfig) {
+    args.push(`--config=${projectConfig}`);
+  }
+
+  args.push(subprocessPath, entryPath, configPath);
+
   const command = new Deno.Command("deno", {
-    args: [
-      "run",
-      "-A",
-      `--config=${projectConfig}`,
-      subprocessPath,
-      configPath,
-      projectRoot,
-    ],
+    args,
     stdout: "piped",
     stderr: "piped",
   });
@@ -166,12 +161,15 @@ async function compileInSubprocess(
         error: string;
       };
       throw new BuildError(
-        `UnoCSS compilation failed: ${result.error}`,
+        `CSS compilation failed: ${result.error}`,
         undefined,
       );
-    } catch {
+    } catch (parseError) {
+      if (parseError instanceof BuildError) {
+        throw parseError;
+      }
       throw new BuildError(
-        `UnoCSS compilation failed: ${stderrText || `exit code ${code}`}`,
+        `CSS compilation failed: ${stderrText || `exit code ${code}`}`,
         undefined,
       );
     }
@@ -180,35 +178,14 @@ async function compileInSubprocess(
   try {
     const result = JSON.parse(stdoutText) as { success: true; css: string };
     return result.css;
-  } catch {
+  } catch (parseError) {
+    if (parseError instanceof BuildError) {
+      throw parseError;
+    }
     throw new BuildError(
-      `Failed to parse UnoCSS subprocess output: ${stdoutText}`,
+      `Failed to parse CSS subprocess output: ${stdoutText}`,
       undefined,
     );
-  }
-}
-
-/**
- * Load UnoCSS config from file.
- */
-async function loadUnoConfig(configPath: string): Promise<UserConfig> {
-  try {
-    // Convert to file:// URL to ensure local file resolution when running from JSR
-    const configUrl = configPath.startsWith("/")
-      ? `file://${configPath}`
-      : configPath;
-    const module = await import(configUrl);
-    return module.default ?? {};
-  } catch (error) {
-    // deno-coverage-ignore-start -- defensive handling for non-Error exceptions
-    throw new BuildError(
-      `Failed to load UnoCSS config from ${configPath}: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-      undefined,
-      { cause: error instanceof Error ? error : undefined },
-    );
-    // deno-coverage-ignore-stop
   }
 }
 
@@ -216,7 +193,7 @@ async function loadUnoConfig(configPath: string): Promise<UserConfig> {
 const VALID_CSS_PATH_PATTERN = /^(\/[a-z0-9_-]+)*\/__styles\/[A-F0-9]{8}\.css$/;
 
 /**
- * Inject UnoCSS stylesheet link into HTML.
+ * Inject CSS stylesheet link into HTML.
  *
  * Adds a `<link rel="stylesheet">` tag before the closing `</head>` tag.
  *

@@ -41,6 +41,11 @@ const DEFAULT_OUT_DIR = "./dist";
  *   siteMetadata: { baseUrl: "https://example.com" },
  * });
  *
+ * // With CSS processing (requires postcss.config.ts)
+ * const { dev, build, serve } = pages({
+ *   css: { entry: "./styles/index.css" },
+ * });
+ *
  * // Development (defaults: pagesDir="./pages")
  * await dev(app);
  *
@@ -58,6 +63,7 @@ export function pages(config: PagesConfig = {}): PagesInstance {
   const parsed = PagesConfigSchema.parse(config);
   const basePath = parsed.basePath;
   const markdownClassName = parsed.markdown?.wrapperClassName;
+  const cssEntry = parsed.css?.entry;
 
   // Configure syntax highlighting theme if specified
   if (parsed.shikiTheme) {
@@ -70,6 +76,7 @@ export function pages(config: PagesConfig = {}): PagesInstance {
       pagesDir,
       basePath,
       markdownClassName,
+      cssEntry,
     });
   }
 
@@ -79,7 +86,14 @@ export function pages(config: PagesConfig = {}): PagesInstance {
     const sitemap = config.siteMetadata
       ? { baseUrl: config.siteMetadata.baseUrl }
       : undefined;
-    await buildSite({ pagesDir, outDir, sitemap, basePath, markdownClassName });
+    await buildSite({
+      pagesDir,
+      outDir,
+      sitemap,
+      basePath,
+      markdownClassName,
+      cssEntry,
+    });
   }
 
   function serve(app: TabiApp, options: ServeOptions = {}): void {

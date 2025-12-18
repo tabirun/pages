@@ -55,6 +55,12 @@ export interface BuildSiteOptions {
    * @example "prose prose-lg"
    */
   markdownClassName?: string;
+  /**
+   * CSS entry file path (relative to project root).
+   * Required when postcss.config.ts exists for CSS processing.
+   * @example "./styles/index.css"
+   */
+  cssEntry?: string;
 }
 
 /**
@@ -86,9 +92,9 @@ export interface BuildAssetResult {
 }
 
 /**
- * Result of UnoCSS compilation.
+ * Result of CSS compilation.
  */
-export interface BuildUnoCSSResult {
+export interface BuildCSSResult {
   /** Public URL path to the generated CSS file. */
   publicPath: string;
 }
@@ -111,8 +117,8 @@ export interface BuildSiteResult {
   pages: BuildPageResult[];
   /** Results for each asset copied (with hashes). */
   assets: BuildAssetResult[];
-  /** UnoCSS compilation result, if uno.config.ts exists. */
-  unoCSS?: BuildUnoCSSResult;
+  /** CSS compilation result, if postcss.config.ts and cssEntry exist. */
+  css?: BuildCSSResult;
   /** Sitemap generation result, if sitemap options provided. */
   sitemap?: BuildSitemapResult;
   /** Total build duration in milliseconds. */

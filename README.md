@@ -13,54 +13,87 @@
   <img src="./assets/mascot-readme.png" alt="Tabi Mascot" width="200"/>
 </p>
 
-> Tabi (旅) means "journey" in Japanese. The shortest path between two points is
-> a straight line. Tabi stays out of your way—no abstractions to fight, no magic
-> to reverse-engineer, no surprises in production. Every build should be a
-> stress free journey.
-
 ## Quick Start
 
 ```bash
 deno add jsr:@tabirun/app jsr:@tabirun/pages
 ```
 
-Add to `deno.json`:
+**deno.json**
 
 ```json
 {
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "@tabirun/pages/preact"
+  },
+  "imports": {
+    "@tabirun/app": "jsr:@tabirun/app@^0.1.2",
+    "@tabirun/pages": "jsr:@tabirun/pages@^0.6.0",
+    "postcss": "npm:postcss@^8.4.49"
   }
 }
 ```
 
-Create `dev.ts`:
+**postcss.config.ts**
+
+```typescript
+import type { Config } from "postcss";
+
+export default { plugins: [] } satisfies Config;
+```
+
+**styles/index.css**
+
+```css
+body {
+  font-family: system-ui, sans-serif;
+}
+```
+
+**pages/index.md**
+
+```markdown
+# Hello, Tabi Pages!
+```
+
+**dev.ts**
 
 ```typescript
 import { TabiApp } from "@tabirun/app";
 import { pages } from "@tabirun/pages";
 
 const app = new TabiApp();
-
-const { dev } = pages();
+const { dev } = pages({ css: { entry: "./styles/index.css" } });
 await dev(app);
 
 Deno.serve({ port: 3000 }, app.handler);
 ```
 
-Create a `pages/` directory and add `index.md`:
+**build.ts**
 
-```markdown
----
-title: Hello, Tabi Pages!
----
+```typescript
+import { pages } from "@tabirun/pages";
 
-# Hello, Tabi Pages!
+const { build } = pages({ css: { entry: "./styles/index.css" } });
+await build();
 ```
 
-Run the development server:
+**serve.ts**
+
+```typescript
+import { TabiApp } from "@tabirun/app";
+import { pages } from "@tabirun/pages";
+
+const app = new TabiApp();
+const { serve } = pages();
+serve(app);
+
+Deno.serve({ port: 3000 }, app.handler);
+```
 
 ```bash
-deno run --allow-all dev.ts
+deno run -A dev.ts    # Development with hot reload
+deno run -A build.ts  # Build to ./dist
+deno run -A serve.ts  # Serve ./dist
 ```

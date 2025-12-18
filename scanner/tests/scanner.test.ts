@@ -207,16 +207,18 @@ describe("scanPages", () => {
       }
     });
 
-    it("should discover uno.config.ts at root", async () => {
+    it("should discover postcss.config.ts at root", async () => {
       const tempDir = await Deno.makeTempDir();
       try {
         await Deno.mkdir(join(tempDir, "pages"));
-        await Deno.writeTextFile(join(tempDir, "uno.config.ts"), "");
+        await Deno.writeTextFile(join(tempDir, "postcss.config.ts"), "");
 
         const manifest = await scanPages({ rootDir: tempDir });
 
-        expect(manifest.systemFiles.unoConfig).not.toBeNull();
-        expect(manifest.systemFiles.unoConfig).toContain("uno.config.ts");
+        expect(manifest.systemFiles.postcssConfig).not.toBeNull();
+        expect(manifest.systemFiles.postcssConfig).toContain(
+          "postcss.config.ts",
+        );
       } finally {
         await Deno.remove(tempDir, { recursive: true });
       }
@@ -232,7 +234,7 @@ describe("scanPages", () => {
         expect(manifest.systemFiles.html).toBeNull();
         expect(manifest.systemFiles.notFound).toBeNull();
         expect(manifest.systemFiles.error).toBeNull();
-        expect(manifest.systemFiles.unoConfig).toBeNull();
+        expect(manifest.systemFiles.postcssConfig).toBeNull();
       } finally {
         await Deno.remove(tempDir, { recursive: true });
       }

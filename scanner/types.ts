@@ -32,8 +32,8 @@ export interface SystemFiles {
   notFound: string | null;
   /** Custom error page. Null if using default. */
   error: string | null;
-  /** UnoCSS config. Null if UnoCSS not enabled. */
-  unoConfig: string | null;
+  /** PostCSS config. Null if PostCSS not enabled. */
+  postcssConfig: string | null;
 }
 
 /**
@@ -72,7 +72,7 @@ export type FileCategory =
   | "page"
   | "layout"
   | "system"
-  | "unoConfig"
+  | "postcssConfig"
   | "publicAsset"
   | "code";
 

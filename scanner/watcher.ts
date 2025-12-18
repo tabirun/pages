@@ -62,9 +62,9 @@ function categorizeFile(
   publicDir: string,
   rootDir: string,
 ): FileCategory | null {
-  // Check if it's uno.config.ts at root
-  if (filePath === join(rootDir, "uno.config.ts")) {
-    return "unoConfig";
+  // Check if it's postcss.config.ts at root
+  if (filePath === join(rootDir, "postcss.config.ts")) {
+    return "postcssConfig";
   }
 
   // Check if it's in public directory

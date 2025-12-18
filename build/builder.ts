@@ -24,7 +24,7 @@ import {
   type BuildSiteOptions,
   type BuildSiteResult,
 } from "./types.ts";
-import { compileUnoCSS, injectStylesheet } from "../unocss/compiler.ts";
+import { compileCSS, injectStylesheet } from "../css/compiler.ts";
 import { generateSitemap } from "./sitemap.ts";
 
 /** Subdirectory for client bundles within output directory. */
@@ -60,6 +60,7 @@ export async function buildSite(
     sitemap,
     basePath = "",
     markdownClassName,
+    cssEntry,
   } = options;
 
   // Validate paths
@@ -148,29 +149,33 @@ export async function buildSite(
     });
     const assetMap = createAssetMap(hashedAssets, basePath);
 
-    // Compile UnoCSS if config exists
-    let unoResult: { css: string; publicPath: string } | undefined;
-    if (manifest.systemFiles.unoConfig) {
-      const unoCompileResult = await compileUnoCSS({
-        configPath: manifest.systemFiles.unoConfig,
-        projectRoot: dirname(pagesDir),
+    // Compile CSS if postcss config and entry file exist
+    let cssResult: { css: string; publicPath: string } | undefined;
+    const projectRoot = dirname(pagesDir);
+    if (manifest.systemFiles.postcssConfig && cssEntry) {
+      const entryPath = join(projectRoot, cssEntry);
+      const projectConfig = join(projectRoot, "deno.json");
+      const cssCompileResult = await compileCSS({
+        entryPath,
+        configPath: manifest.systemFiles.postcssConfig,
         outDir,
         basePath,
+        projectConfig,
       });
-      if (unoCompileResult.css) {
-        unoResult = {
-          css: unoCompileResult.css,
-          publicPath: unoCompileResult.publicPath,
+      if (cssCompileResult.css) {
+        cssResult = {
+          css: cssCompileResult.css,
+          publicPath: cssCompileResult.publicPath,
         };
       }
     }
 
-    // Post-process HTML files: rewrite asset URLs and inject UnoCSS
+    // Post-process HTML files: rewrite asset URLs and inject CSS
     for (const page of results) {
       let html = await Deno.readTextFile(page.htmlPath);
       html = rewriteAssetUrls(html, assetMap);
-      if (unoResult) {
-        html = injectStylesheet(html, unoResult.publicPath);
+      if (cssResult) {
+        html = injectStylesheet(html, cssResult.publicPath);
       }
       await Deno.writeTextFile(page.htmlPath, html);
     }
@@ -200,7 +205,7 @@ export async function buildSite(
     return {
       pages: results,
       assets: hashedAssets,
-      unoCSS: unoResult ? { publicPath: unoResult.publicPath } : undefined,
+      css: cssResult ? { publicPath: cssResult.publicPath } : undefined,
       sitemap: sitemapResult,
       durationMs: Math.round(performance.now() - startTime),
     };

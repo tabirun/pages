@@ -1,6 +1,16 @@
 import type { TabiApp } from "@tabirun/app";
 import type { DevServerHandle } from "../dev/server.ts";
-import type { PagesConfigInput, SiteMetadataConfig } from "./config.ts";
+import type {
+  CSSOptionsConfig,
+  PagesConfigInput,
+  SiteMetadataConfig,
+} from "./config.ts";
+
+/**
+ * CSS processing options. When provided with a postcss.config.ts,
+ * enables CSS processing via PostCSS.
+ */
+export type CSSOptions = CSSOptionsConfig;
 
 /**
  * Site metadata configuration. When provided, enables sitemap.xml generation.

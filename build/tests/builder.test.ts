@@ -16,12 +16,12 @@ const FIXTURES_NO_LAYOUT_DIR = new URL(
 const PAGES_NO_LAYOUT_DIR = join(FIXTURES_NO_LAYOUT_DIR, "pages");
 const TEST_OUT_NO_LAYOUT_DIR = join(FIXTURES_NO_LAYOUT_DIR, ".dist-test");
 
-const FIXTURES_UNOCSS_DIR = new URL(
-  "./fixtures-unocss/",
+const FIXTURES_POSTCSS_DIR = new URL(
+  "./fixtures-postcss/",
   import.meta.url,
 ).pathname;
-const PAGES_UNOCSS_DIR = join(FIXTURES_UNOCSS_DIR, "pages");
-const TEST_OUT_UNOCSS_DIR = join(FIXTURES_UNOCSS_DIR, ".dist-test");
+const PAGES_POSTCSS_DIR = join(FIXTURES_POSTCSS_DIR, "pages");
+const TEST_OUT_POSTCSS_DIR = join(FIXTURES_POSTCSS_DIR, ".dist-test");
 
 const FIXTURES_HTML_TEMPLATE_DIR = new URL(
   "./fixtures-html-template/",
@@ -47,7 +47,7 @@ describe("buildSite", () => {
       // Ignore if doesn't exist
     }
     try {
-      await Deno.remove(TEST_OUT_UNOCSS_DIR, { recursive: true });
+      await Deno.remove(TEST_OUT_POSTCSS_DIR, { recursive: true });
     } catch {
       // Ignore if doesn't exist
     }
@@ -71,7 +71,7 @@ describe("buildSite", () => {
       // Ignore if doesn't exist
     }
     try {
-      await Deno.remove(TEST_OUT_UNOCSS_DIR, { recursive: true });
+      await Deno.remove(TEST_OUT_POSTCSS_DIR, { recursive: true });
     } catch {
       // Ignore if doesn't exist
     }
@@ -386,29 +386,31 @@ describe("buildSite", () => {
     });
   });
 
-  describe("UnoCSS integration", () => {
-    it("compiles UnoCSS when config exists", async () => {
+  describe("PostCSS integration", () => {
+    it("compiles CSS when config and entry exist", async () => {
       const result = await buildSite({
-        pagesDir: PAGES_UNOCSS_DIR,
-        outDir: TEST_OUT_UNOCSS_DIR,
+        pagesDir: PAGES_POSTCSS_DIR,
+        outDir: TEST_OUT_POSTCSS_DIR,
+        cssEntry: "./styles/index.css",
       });
 
-      // Should have unoCSS result
-      expect(result.unoCSS).toBeDefined();
-      expect(result.unoCSS!.publicPath).toMatch(
+      // Should have css result
+      expect(result.css).toBeDefined();
+      expect(result.css!.publicPath).toMatch(
         /^\/__styles\/[A-F0-9]{8}\.css$/,
       );
     });
 
     it("generates CSS file in __styles directory", async () => {
       const result = await buildSite({
-        pagesDir: PAGES_UNOCSS_DIR,
-        outDir: TEST_OUT_UNOCSS_DIR,
+        pagesDir: PAGES_POSTCSS_DIR,
+        outDir: TEST_OUT_POSTCSS_DIR,
+        cssEntry: "./styles/index.css",
       });
 
       // Extract filename from public path
-      const cssFilename = result.unoCSS!.publicPath.split("/").pop()!;
-      const cssPath = join(TEST_OUT_UNOCSS_DIR, "__styles", cssFilename);
+      const cssFilename = result.css!.publicPath.split("/").pop()!;
+      const cssPath = join(TEST_OUT_POSTCSS_DIR, "__styles", cssFilename);
 
       // Verify CSS file exists
       const cssExists = await exists(cssPath);
@@ -423,8 +425,9 @@ describe("buildSite", () => {
 
     it("injects stylesheet link into HTML", async () => {
       const result = await buildSite({
-        pagesDir: PAGES_UNOCSS_DIR,
-        outDir: TEST_OUT_UNOCSS_DIR,
+        pagesDir: PAGES_POSTCSS_DIR,
+        outDir: TEST_OUT_POSTCSS_DIR,
+        cssEntry: "./styles/index.css",
       });
 
       const indexPage = result.pages.find((p) => p.route === "/");
@@ -432,7 +435,7 @@ describe("buildSite", () => {
 
       // Should contain stylesheet link with hashed path
       expect(html).toContain(
-        `<link rel="stylesheet" href="${result.unoCSS!.publicPath}">`,
+        `<link rel="stylesheet" href="${result.css!.publicPath}">`,
       );
       // Link should be in head
       expect(html).toMatch(
@@ -440,14 +443,25 @@ describe("buildSite", () => {
       );
     });
 
-    it("returns undefined unoCSS when no config exists", async () => {
+    it("returns undefined css when no config exists", async () => {
       const result = await buildSite({
         pagesDir: PAGES_DIR,
         outDir: TEST_OUT_DIR,
       });
 
-      // fixtures/ directory has no uno.config.ts
-      expect(result.unoCSS).toBeUndefined();
+      // fixtures/ directory has no postcss.config.ts
+      expect(result.css).toBeUndefined();
+    });
+
+    it("returns undefined css when no entry provided", async () => {
+      const result = await buildSite({
+        pagesDir: PAGES_POSTCSS_DIR,
+        outDir: TEST_OUT_POSTCSS_DIR,
+        // No cssEntry provided
+      });
+
+      // Should not compile CSS without entry
+      expect(result.css).toBeUndefined();
     });
   });
 

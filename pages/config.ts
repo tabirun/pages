@@ -17,6 +17,19 @@ export const SiteMetadataSchema: z.ZodObject<{ baseUrl: z.ZodString }> = z
 const BASE_PATH_REGEX = /^(\/[a-z0-9_-]+)*$/;
 
 /**
+ * Schema for CSS processing options.
+ */
+export const CSSOptionsSchema = z.object({
+  /**
+   * CSS entry file path (relative to project root).
+   * This file will be processed by PostCSS and its output injected into all pages.
+   * @default "./styles/index.css"
+   * @example "./src/styles/main.css"
+   */
+  entry: z.string().default("./styles/index.css"),
+});
+
+/**
  * Schema for markdown rendering options.
  */
 export const MarkdownOptionsSchema = z.object({
@@ -37,6 +50,7 @@ export const PagesConfigSchema: z.ZodType<
     shikiTheme?: string;
     siteMetadata?: { baseUrl: string };
     markdown?: { wrapperClassName?: string };
+    css?: { entry: string };
   },
   z.ZodTypeDef,
   {
@@ -44,6 +58,7 @@ export const PagesConfigSchema: z.ZodType<
     shikiTheme?: string;
     siteMetadata?: { baseUrl: string };
     markdown?: { wrapperClassName?: string };
+    css?: { entry?: string };
   }
 > = z.object({
   /**
@@ -71,12 +86,19 @@ export const PagesConfigSchema: z.ZodType<
   siteMetadata: SiteMetadataSchema.optional(),
   /** Markdown rendering options. */
   markdown: MarkdownOptionsSchema.optional(),
+  /** CSS processing options. */
+  css: CSSOptionsSchema.optional(),
 });
 
 /**
  * Site metadata configuration type.
  */
 export type SiteMetadataConfig = z.infer<typeof SiteMetadataSchema>;
+
+/**
+ * CSS options type.
+ */
+export type CSSOptionsConfig = z.infer<typeof CSSOptionsSchema>;
 
 /**
  * Markdown options type.

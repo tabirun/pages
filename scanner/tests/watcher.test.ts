@@ -233,27 +233,27 @@ describe("watchPages", () => {
     });
   });
 
-  describe("uno.config.ts changes", () => {
-    it("should emit unoConfig event for uno.config.ts", async () => {
+  describe("postcss.config.ts changes", () => {
+    it("should emit postcssConfig event for postcss.config.ts", async () => {
       const tempDir = await Deno.makeTempDir();
       try {
         await Deno.mkdir(join(tempDir, "pages"));
         // Create the file first so the watcher can start watching it
         await Deno.writeTextFile(
-          join(tempDir, "uno.config.ts"),
+          join(tempDir, "postcss.config.ts"),
           "export default {};",
         );
 
         const events = await collectEvents(tempDir, async () => {
           await Deno.writeTextFile(
-            join(tempDir, "uno.config.ts"),
-            "export default { rules: [] };",
+            join(tempDir, "postcss.config.ts"),
+            "export default { plugins: [] };",
           );
         });
 
-        const unoEvent = events.find((e) => e.category === "unoConfig");
-        expect(unoEvent).toBeDefined();
-        expect(unoEvent!.category).toBe("unoConfig");
+        const postcssEvent = events.find((e) => e.category === "postcssConfig");
+        expect(postcssEvent).toBeDefined();
+        expect(postcssEvent!.category).toBe("postcssConfig");
       } finally {
         await Deno.remove(tempDir, { recursive: true });
       }

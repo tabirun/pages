@@ -26,6 +26,12 @@ export interface DevServerOptions {
   basePath?: string;
   /** CSS class name(s) to apply to markdown wrapper divs. */
   markdownClassName?: string;
+  /**
+   * CSS entry file path (relative to project root).
+   * Required when postcss.config.ts exists for CSS processing.
+   * @example "./styles/index.css"
+   */
+  cssEntry?: string;
 }
 
 /**
@@ -40,7 +46,7 @@ interface BuildResult {
   success: true;
   html: string;
   bundlePublicPath: string;
-  unoPublicPath?: string;
+  cssPublicPath?: string;
 }
 
 interface BuildError {
@@ -62,6 +68,7 @@ interface DevServerState {
   wsClients: Set<WebSocket>;
   watchHandle: WatchHandle | null;
   markdownClassName?: string;
+  cssEntry?: string;
 }
 
 /**
@@ -93,6 +100,7 @@ export async function registerDevServer(
   const pagesDir = resolve(options.pagesDir ?? "./pages");
   const basePath = options.basePath ?? "";
   const markdownClassName = options.markdownClassName;
+  const cssEntry = options.cssEntry;
   const projectRoot = dirname(pagesDir);
   const publicDir = join(projectRoot, "public");
   const outDir = join(projectRoot, ".tabi");
@@ -119,6 +127,7 @@ export async function registerDevServer(
     wsClients: new Set(),
     watchHandle: null,
     markdownClassName,
+    cssEntry,
   };
 
   // Start file watcher
@@ -186,7 +195,7 @@ export async function registerDevServer(
     }
   });
 
-  // Serve UnoCSS from .tabi directory
+  // Serve CSS from .tabi directory
   const stylesPattern = basePath ? `${basePath}/__styles/*` : "/__styles/*";
   app.get(stylesPattern, async (c) => {
     const pathname = c.req.url.pathname;
@@ -268,7 +277,8 @@ async function handlePageRequest(
   c: TabiContext,
   state: DevServerState,
 ): Promise<void> {
-  const { pagesDir, basePath, outDir, manifest, markdownClassName } = state;
+  const { pagesDir, basePath, outDir, manifest, markdownClassName, cssEntry } =
+    state;
 
   // Get route from request path
   let route = c.req.url.pathname;
@@ -293,6 +303,7 @@ async function handlePageRequest(
         outDir,
         basePath,
         markdownClassName,
+        cssEntry,
       );
 
       if (result.success) {
@@ -317,6 +328,7 @@ async function handlePageRequest(
     outDir,
     basePath,
     markdownClassName,
+    cssEntry,
   );
 
   if (!result.success) {
@@ -369,6 +381,7 @@ async function buildPageSubprocess(
   outDir: string,
   basePath: string,
   markdownClassName?: string,
+  cssEntry?: string,
 ): Promise<BuildOutput> {
   // Use full URL for remote (JSR), pathname for local files
   const buildPageUrl = new URL("./build-page.ts", import.meta.url);
@@ -376,7 +389,7 @@ async function buildPageSubprocess(
     ? buildPageUrl.pathname
     : buildPageUrl.href;
 
-  // Find project config for UnoCSS import resolution
+  // Find project config for CSS import resolution
   const projectConfig = await findDenoConfig(pagesDir);
 
   // Build args - only use modified config when running from JSR
@@ -397,6 +410,7 @@ async function buildPageSubprocess(
     basePath,
     markdownClassName ?? "",
     projectConfig ?? "",
+    cssEntry ?? "",
   );
 
   const command = new Deno.Command("deno", {
