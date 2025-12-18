@@ -35,8 +35,8 @@
     "./preact/hooks": "./preact/hooks.ts"
   },
   "tasks": {
-    "test": "deno test --allow-all --clean --coverage=coverage && deno coverage coverage --exclude='.*/tests/fixtures/.*' --exclude='.*subprocess\\.ts$' --exclude='.*/T/.*'",
-    "coverage": "deno coverage coverage --exclude='.*/tests/fixtures/.*' --exclude='.*subprocess\\.ts$' --exclude='.*/T/.*'",
+    "test": "deno test --allow-all --clean --coverage=coverage && deno coverage coverage --exclude='.*/tests/fixtures/.*' --exclude='.*subprocess\\.ts$' --exclude='.*/T/.*' --exclude='^file:///tmp/.*'",
+    "coverage": "deno coverage coverage --exclude='.*/tests/fixtures/.*' --exclude='.*subprocess\\.ts$' --exclude='.*/T/.*' --exclude='^file:///tmp/.*'",
     "lint": "deno lint",
     "format": "deno fmt",
     "check": "deno check ."
