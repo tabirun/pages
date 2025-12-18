@@ -277,6 +277,7 @@ async function handlePageRequest(
   c: TabiContext,
   state: DevServerState,
 ): Promise<void> {
+  const startTime = performance.now();
   const { pagesDir, basePath, outDir, manifest, markdownClassName, cssEntry } =
     state;
 
@@ -346,7 +347,8 @@ async function handlePageRequest(
   c.html(html);
 
   // Log rendered page (ephemeral - overwrites previous line)
-  logger.ephemeral.info(`Rendered ${route}`);
+  const duration = Math.round(performance.now() - startTime);
+  logger.ephemeral.info(`Rendered ${route} (${duration}ms)`);
 }
 
 /**
