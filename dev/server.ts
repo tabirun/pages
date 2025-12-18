@@ -15,7 +15,7 @@ import { watchPages } from "../scanner/watcher.ts";
 import type { PageManifest, WatchHandle } from "../scanner/types.ts";
 import { escapeHtml } from "../utils/html.ts";
 import { logger } from "../utils/logger.ts";
-import { bundleSSR, stopSSRBundler } from "../bundler/ssr.ts";
+import { bundleSSR } from "../bundler/ssr.ts";
 import { bundleClient, stopEsbuild } from "../bundler/client.ts";
 import { renderPage } from "../renderer/renderer.tsx";
 import { loadDocument } from "../loaders/html-loader.ts";
@@ -265,8 +265,8 @@ export async function registerDevServer(
       }
       state.wsClients.clear();
 
-      // Stop esbuild services
-      await Promise.all([stopSSRBundler(), stopEsbuild()]);
+      // Stop esbuild service (shared by SSR and client bundling)
+      await stopEsbuild();
 
       // Clean up .tabi directory
       try {

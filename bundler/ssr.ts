@@ -191,11 +191,3 @@ interface SSRModule {
   page?: LoadedTsxPage;
   layouts?: LoadedLayout[];
 }
-
-/**
- * Stop the esbuild service.
- * Call this when shutting down to release resources.
- */
-export function stopSSRBundler(): Promise<void> {
-  return esbuild.stop();
-}
