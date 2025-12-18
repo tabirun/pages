@@ -117,6 +117,32 @@ export async function compileCSS(
 }
 
 /**
+ * Inline subprocess code for PostCSS compilation.
+ * Written to temp file when running from JSR to ensure --config is respected.
+ */
+const SUBPROCESS_CODE = `
+const args = Deno.args;
+if (args.length < 2) {
+  console.log(JSON.stringify({ success: false, error: "Usage: subprocess.ts <entryPath> <configPath>" }));
+  Deno.exit(1);
+}
+const [entryPath, configPath] = args;
+try {
+  const cssContent = await Deno.readTextFile(entryPath);
+  const configUrl = configPath.startsWith("/") ? "file://" + configPath : configPath;
+  const configModule = await import(configUrl);
+  const config = configModule.default ?? {};
+  const postcss = await import("postcss");
+  const processor = postcss.default(config.plugins ?? []);
+  const result = await processor.process(cssContent, { from: entryPath });
+  console.log(JSON.stringify({ success: true, css: result.css }));
+} catch (err) {
+  console.log(JSON.stringify({ success: false, error: err instanceof Error ? err.message : String(err) }));
+  Deno.exit(1);
+}
+`;
+
+/**
  * Compile CSS in a subprocess with project's import map.
  * This allows resolving project dependencies (PostCSS plugins) without
  * affecting other dependency resolution in the main process.
@@ -127,9 +153,17 @@ async function compileInSubprocess(
   projectConfig?: string,
 ): Promise<string> {
   const subprocessUrl = new URL("./subprocess.ts", import.meta.url);
-  const subprocessPath = subprocessUrl.protocol === "file:"
-    ? subprocessUrl.pathname
-    : subprocessUrl.href;
+  const isRemote = subprocessUrl.protocol !== "file:";
+
+  // When running from JSR, write subprocess to temp file so --config is respected
+  let subprocessPath: string;
+  if (isRemote) {
+    const tempFile = await Deno.makeTempFile({ suffix: ".ts" });
+    await Deno.writeTextFile(tempFile, SUBPROCESS_CODE);
+    subprocessPath = tempFile;
+  } else {
+    subprocessPath = subprocessUrl.pathname;
+  }
 
   const args = [
     "run",
