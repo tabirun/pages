@@ -116,7 +116,7 @@ export async function bundleSSR(
     format: "esm",
     target: "es2020",
     jsx: "automatic",
-    jsxImportSource: "preact",
+    jsxImportSource: "@tabirun/pages/preact",
     minify: false,
     sourcemap: false,
     write: false,
