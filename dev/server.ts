@@ -1,8 +1,8 @@
 /**
  * Development server for pages module.
  *
- * Serves pages with hot reload via subprocess builds.
- * Uses fresh Deno process per request to escape module caching.
+ * Serves pages with hot reload via SSR bundling.
+ * Uses esbuild to bundle fresh components, bypassing Deno's module cache.
  *
  * @module
  */
@@ -15,6 +15,11 @@ import { watchPages } from "../scanner/watcher.ts";
 import type { PageManifest, WatchHandle } from "../scanner/types.ts";
 import { escapeHtml } from "../utils/html.ts";
 import { logger } from "../utils/logger.ts";
+import { bundleSSR, stopSSRBundler } from "../bundler/ssr.ts";
+import { bundleClient, stopEsbuild } from "../bundler/client.ts";
+import { renderPage } from "../renderer/renderer.tsx";
+import { loadDocument } from "../loaders/html-loader.ts";
+import { compileCSS, injectStylesheet } from "../css/compiler.ts";
 
 /**
  * Options for the development server.
@@ -40,7 +45,7 @@ export interface DevServerOptions {
 type HMRMessage = { type: "reload" };
 
 /**
- * Build result from subprocess.
+ * Build result from page building.
  */
 interface BuildResult {
   success: true;
@@ -64,6 +69,7 @@ interface DevServerState {
   pagesDir: string;
   basePath: string;
   outDir: string;
+  projectRoot: string;
   manifest: PageManifest;
   wsClients: Set<WebSocket>;
   watchHandle: WatchHandle | null;
@@ -83,7 +89,7 @@ export interface DevServerHandle {
  * Registers development server routes.
  *
  * Behavior:
- * - Serves pages by building on-demand via subprocess
+ * - Serves pages by building on-demand via SSR bundling
  * - WebSocket endpoint for hot reload notifications
  * - Serves client bundles from .tabi directory
  * - Serves public assets from public directory
@@ -123,6 +129,7 @@ export async function registerDevServer(
     pagesDir,
     basePath,
     outDir,
+    projectRoot,
     manifest,
     wsClients: new Set(),
     watchHandle: null,
@@ -258,6 +265,9 @@ export async function registerDevServer(
       }
       state.wsClients.clear();
 
+      // Stop esbuild services
+      await Promise.all([stopSSRBundler(), stopEsbuild()]);
+
       // Clean up .tabi directory
       try {
         await Deno.remove(state.outDir, { recursive: true });
@@ -271,15 +281,14 @@ export async function registerDevServer(
 }
 
 /**
- * Handle a page request by building via subprocess.
+ * Handle a page request by building via SSR bundling.
  */
 async function handlePageRequest(
   c: TabiContext,
   state: DevServerState,
 ): Promise<void> {
   const startTime = performance.now();
-  const { pagesDir, basePath, outDir, manifest, markdownClassName, cssEntry } =
-    state;
+  const { basePath, manifest } = state;
 
   // Get route from request path
   let route = c.req.url.pathname;
@@ -297,14 +306,11 @@ async function handlePageRequest(
 
   if (!pageEntry) {
     // Try to build custom 404 page if it exists
-    if (manifest.systemFiles.notFound) {
-      const result = await buildPageSubprocess(
-        pagesDir,
-        "/_not-found",
-        outDir,
-        basePath,
-        markdownClassName,
-        cssEntry,
+    const notFoundEntry = manifest.pages.find((p) => p.route === "/_not-found");
+    if (notFoundEntry) {
+      const result = await buildPage(
+        notFoundEntry,
+        state,
       );
 
       if (result.success) {
@@ -322,15 +328,8 @@ async function handlePageRequest(
     return;
   }
 
-  // Build page via subprocess
-  const result = await buildPageSubprocess(
-    pagesDir,
-    route,
-    outDir,
-    basePath,
-    markdownClassName,
-    cssEntry,
-  );
+  // Build page
+  const result = await buildPage(pageEntry, state);
 
   if (!result.success) {
     const errorHtml = injectHmrScript(
@@ -375,76 +374,98 @@ async function findDenoConfig(startDir: string): Promise<string | null> {
 }
 
 /**
- * Build a page in a subprocess to escape module caching.
+ * Build a page using SSR bundling.
  */
-async function buildPageSubprocess(
-  pagesDir: string,
-  route: string,
-  outDir: string,
-  basePath: string,
-  markdownClassName?: string,
-  cssEntry?: string,
+async function buildPage(
+  pageEntry: {
+    route: string;
+    filePath: string;
+    type: "tsx" | "markdown";
+    layoutChain: string[];
+  },
+  state: DevServerState,
 ): Promise<BuildOutput> {
-  // Use full URL for remote (JSR), pathname for local files
-  const buildPageUrl = new URL("./build-page.ts", import.meta.url);
-  const buildPagePath = buildPageUrl.protocol === "file:"
-    ? buildPageUrl.pathname
-    : buildPageUrl.href;
-
-  // Find project config for CSS import resolution
-  const projectConfig = await findDenoConfig(pagesDir);
-
-  // Build args - only use modified config when running from JSR
-  // Local files inherit parent's config, but JSR needs explicit config
-  const isRunningFromJsr = buildPageUrl.protocol === "https:";
-  const args = ["run", "-A"];
-
-  if (isRunningFromJsr && projectConfig) {
-    // Pass project config so subprocess can resolve imports
-    args.push(`--config=${projectConfig}`);
-  }
-
-  args.push(
-    buildPagePath,
+  const {
     pagesDir,
-    route,
-    outDir,
     basePath,
-    markdownClassName ?? "",
-    projectConfig ?? "",
-    cssEntry ?? "",
-  );
-
-  const command = new Deno.Command("deno", {
-    args,
-    stdout: "piped",
-    stderr: "piped",
-  });
-
-  const { code, stdout, stderr } = await command.output();
-
-  const stdoutText = new TextDecoder().decode(stdout);
-  const stderrText = new TextDecoder().decode(stderr);
-
-  if (code !== 0) {
-    // Try to parse JSON from stdout first (our error format)
-    try {
-      return JSON.parse(stdoutText) as BuildOutput;
-    } catch {
-      // Fall back to stderr
-      return {
-        success: false,
-        error: stderrText || `Build failed with exit code ${code}`,
-      };
-    }
-  }
+    outDir,
+    projectRoot,
+    manifest,
+    markdownClassName,
+    cssEntry,
+  } = state;
 
   try {
-    return JSON.parse(stdoutText) as BuildOutput;
-  } catch {
+    // Bundle page and layouts for SSR
+    const { page, layouts } = await bundleSSR({
+      pageEntry,
+      outDir,
+      projectRoot,
+    });
+
+    // Load custom document template if _html.tsx exists
+    // Note: document is cached by Deno's import, but it's typically static
+    // and users rarely edit it during dev. If caching becomes an issue,
+    // we can add document to SSR bundle.
+    const documentComponent = manifest.systemFiles.html
+      ? (await loadDocument(manifest.systemFiles.html)).component
+      : undefined;
+
+    // Bundle client JS
+    const bundleResult = await bundleClient({
+      page,
+      layouts,
+      route: pageEntry.route,
+      outDir: join(outDir, "__tabi"),
+      mode: "development",
+      projectRoot,
+      basePath,
+    });
+
+    // Render to HTML
+    const { html: rawHtml } = await renderPage({
+      page,
+      layouts,
+      clientBundlePath: bundleResult.publicPath,
+      route: pageEntry.route,
+      document: documentComponent,
+      basePath,
+      markdownClassName,
+    });
+
+    // Compile CSS if config and entry exist
+    let html = rawHtml;
+    let cssPublicPath: string | undefined;
+
+    const projectConfig = await findDenoConfig(pagesDir);
+
+    if (manifest.systemFiles.postcssConfig && cssEntry) {
+      const entryPath = join(projectRoot, cssEntry);
+      const cssResult = await compileCSS({
+        entryPath,
+        configPath: manifest.systemFiles.postcssConfig,
+        outDir,
+        basePath,
+        projectConfig: projectConfig ?? undefined,
+      });
+
+      if (cssResult.css) {
+        html = injectStylesheet(html, cssResult.publicPath);
+        cssPublicPath = cssResult.publicPath;
+      }
+    }
+
+    return {
+      success: true,
+      html,
+      bundlePublicPath: bundleResult.publicPath,
+      cssPublicPath,
+    };
+  } catch (err) {
     return {
       success: false,
-      error: `Failed to parse build output: ${stdoutText}`,
+      error: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
     };
   }
 }
