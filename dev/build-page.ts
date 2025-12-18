@@ -5,10 +5,10 @@
  * It takes command line arguments, builds the requested page, and
  * outputs JSON to stdout.
  *
- * Usage: deno run -A dev/build-page.ts <pagesDir> <route> <outDir> <basePath> <markdownClassName> [projectConfig]
+ * Usage: deno run -A dev/build-page.ts <pagesDir> <route> <outDir> <basePath> <markdownClassName> [projectConfig] [cssEntry]
  *
  * Output (JSON to stdout):
- * Success: { success: true, html: string, bundlePublicPath: string, unoPublicPath?: string }
+ * Success: { success: true, html: string, bundlePublicPath: string, cssPublicPath?: string }
  * Error: { success: false, error: string, stack?: string }
  */
 
@@ -19,13 +19,13 @@ import { loadLayoutChain } from "../loaders/layout-loader.ts";
 import { loadPage } from "../loaders/loader.ts";
 import { renderPage } from "../renderer/renderer.tsx";
 import { scanPages } from "../scanner/scanner.ts";
-import { compileUnoCSS, injectStylesheet } from "../unocss/compiler.ts";
+import { compileCSS, injectStylesheet } from "../css/compiler.ts";
 
 interface BuildResult {
   success: true;
   html: string;
   bundlePublicPath: string;
-  unoPublicPath?: string;
+  cssPublicPath?: string;
 }
 
 interface BuildError {
@@ -41,14 +41,21 @@ async function main(): Promise<void> {
     const error: BuildError = {
       success: false,
       error:
-        "Usage: deno run -A dev/build-page.ts <pagesDir> <route> <outDir> <basePath> <markdownClassName> [projectConfig]",
+        "Usage: deno run -A dev/build-page.ts <pagesDir> <route> <outDir> <basePath> <markdownClassName> [projectConfig] [cssEntry]",
     };
     console.log(JSON.stringify(error));
     Deno.exit(1);
   }
 
-  const [pagesDir, route, outDir, basePath, markdownClassName, projectConfig] =
-    args;
+  const [
+    pagesDir,
+    route,
+    outDir,
+    basePath,
+    markdownClassName,
+    projectConfig,
+    cssEntry,
+  ] = args;
 
   // Validate paths before use
   // Note: All output goes to stdout as JSON for parent process to parse
@@ -87,6 +94,7 @@ async function main(): Promise<void> {
       basePath,
       markdownClassName || undefined,
       projectConfig || undefined,
+      cssEntry || undefined,
     );
     console.log(JSON.stringify(result));
   } catch (err) {
@@ -109,6 +117,7 @@ async function buildPage(
   basePath: string,
   markdownClassName?: string,
   projectConfig?: string,
+  cssEntry?: string,
 ): Promise<BuildResult> {
   // pagesDir is absolute (e.g., /project/pages), derive projectRoot and dir name
   const projectRoot = dirname(pagesDir);
@@ -165,22 +174,23 @@ async function buildPage(
     markdownClassName,
   });
 
-  // Compile UnoCSS if config exists
+  // Compile CSS if config and entry exist
   let html = rawHtml;
-  let unoPublicPath: string | undefined;
+  let cssPublicPath: string | undefined;
 
-  if (manifest.systemFiles.postcssConfig) {
-    const unoResult = await compileUnoCSS({
+  if (manifest.systemFiles.postcssConfig && cssEntry) {
+    const entryPath = join(projectRoot, cssEntry);
+    const cssResult = await compileCSS({
+      entryPath,
       configPath: manifest.systemFiles.postcssConfig,
-      projectRoot,
       outDir,
       basePath,
       projectConfig,
     });
 
-    if (unoResult.css) {
-      html = injectStylesheet(html, unoResult.publicPath);
-      unoPublicPath = unoResult.publicPath;
+    if (cssResult.css) {
+      html = injectStylesheet(html, cssResult.publicPath);
+      cssPublicPath = cssResult.publicPath;
     }
   }
 
@@ -188,7 +198,7 @@ async function buildPage(
     success: true,
     html,
     bundlePublicPath: bundleResult.publicPath,
-    unoPublicPath,
+    cssPublicPath,
   };
 }
 
