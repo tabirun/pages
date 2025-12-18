@@ -35,14 +35,14 @@ export async function scanPages(options: ScanOptions): Promise<PageManifest> {
     html: null,
     notFound: null,
     error: null,
-    unoConfig: null,
+    postcssConfig: null,
   };
   const publicAssets: PublicAsset[] = [];
 
-  // Check for uno.config.ts at project root
-  const unoConfigPath = join(rootDir, "uno.config.ts");
-  if (await exists(unoConfigPath)) {
-    systemFiles.unoConfig = unoConfigPath;
+  // Check for postcss.config.ts at project root
+  const postcssConfigPath = join(rootDir, "postcss.config.ts");
+  if (await exists(postcssConfigPath)) {
+    systemFiles.postcssConfig = postcssConfigPath;
   }
 
   // Scan pages directory

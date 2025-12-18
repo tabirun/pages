@@ -74,7 +74,13 @@ pages/
 ```ts
 interface FileChangeEvent {
   type: "create" | "update" | "delete";
-  category: "page" | "layout" | "system" | "unoConfig" | "publicAsset" | "code";
+  category:
+    | "page"
+    | "layout"
+    | "system"
+    | "postcssConfig"
+    | "publicAsset"
+    | "code";
   filePath: string;
   route?: string; // For pages only
 }

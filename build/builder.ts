@@ -150,9 +150,9 @@ export async function buildSite(
 
     // Compile UnoCSS if config exists
     let unoResult: { css: string; publicPath: string } | undefined;
-    if (manifest.systemFiles.unoConfig) {
+    if (manifest.systemFiles.postcssConfig) {
       const unoCompileResult = await compileUnoCSS({
-        configPath: manifest.systemFiles.unoConfig,
+        configPath: manifest.systemFiles.postcssConfig,
         projectRoot: dirname(pagesDir),
         outDir,
         basePath,

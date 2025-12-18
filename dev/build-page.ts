@@ -169,9 +169,9 @@ async function buildPage(
   let html = rawHtml;
   let unoPublicPath: string | undefined;
 
-  if (manifest.systemFiles.unoConfig) {
+  if (manifest.systemFiles.postcssConfig) {
     const unoResult = await compileUnoCSS({
-      configPath: manifest.systemFiles.unoConfig,
+      configPath: manifest.systemFiles.postcssConfig,
       projectRoot,
       outDir,
       basePath,
