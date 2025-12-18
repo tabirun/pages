@@ -97,32 +97,37 @@ export async function bundleSSR(
   );
   await Deno.writeTextFile(entryPath, entryCode);
 
+  // Check if project has deno.json config
+  const configPath = join(projectRoot, "deno.json");
+  let hasConfig = false;
   try {
-    // Check if project has deno.json config
-    const configPath = join(projectRoot, "deno.json");
-    let hasConfig = false;
-    try {
-      const stat = await Deno.stat(configPath);
-      hasConfig = stat.isFile;
-    } catch {
-      // Config doesn't exist
-    }
+    const stat = await Deno.stat(configPath);
+    hasConfig = stat.isFile;
+  } catch {
+    // Config doesn't exist
+  }
 
-    // Bundle with esbuild
-    const result = await esbuild.build({
-      entryPoints: [entryPath],
-      bundle: true,
-      format: "esm",
-      target: "es2020",
-      jsx: "automatic",
-      jsxImportSource: "preact",
-      minify: false,
-      sourcemap: false,
-      write: false,
-      plugins: [...denoPlugins(hasConfig ? { configPath } : {})],
-      // Mark preact as external - we want the same instance as parent
-      external: ["preact", "preact/*", "preact-render-to-string"],
-    });
+  // Create esbuild context for this build
+  // Using context + dispose gives us explicit lifecycle control
+  // and avoids issues with long-lived child processes
+  const ctx = await esbuild.context({
+    entryPoints: [entryPath],
+    bundle: true,
+    format: "esm",
+    target: "es2020",
+    jsx: "automatic",
+    jsxImportSource: "preact",
+    minify: false,
+    sourcemap: false,
+    write: false,
+    plugins: [...denoPlugins(hasConfig ? { configPath } : {})],
+    // Mark preact as external - we want the same instance as parent
+    external: ["preact", "preact/*", "preact-render-to-string"],
+  });
+
+  try {
+    // Build with the context
+    const result = await ctx.rebuild();
 
     if (!result.outputFiles?.[0]) {
       throw new BundleError(
@@ -181,6 +186,9 @@ export async function bundleSSR(
       pageEntry.route,
       { cause: error instanceof Error ? error : undefined },
     );
+  } finally {
+    // Always dispose the context to clean up the esbuild child process
+    await ctx.dispose();
   }
 }
 
