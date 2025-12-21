@@ -40,9 +40,10 @@ export function generateSSREntry(options: SSREntryOptions): string {
   }
 
   // Import page component (TSX only)
+  // Use namespace import so frontmatter is optional
   if (isTsx) {
     lines.push(
-      `import PageComponent, { frontmatter as pageFrontmatter } from "${
+      `import PageComponent, * as pageModule from "${
         escapePathForJs(pageEntry.filePath)
       }";`,
     );
@@ -55,7 +56,7 @@ export function generateSSREntry(options: SSREntryOptions): string {
     lines.push("export const page = {");
     lines.push('  type: "tsx" as const,');
     lines.push("  component: PageComponent,");
-    lines.push("  frontmatter: pageFrontmatter ?? {},");
+    lines.push("  frontmatter: pageModule.frontmatter ?? {},");
     lines.push(`  filePath: "${escapePathForJs(pageEntry.filePath)}",`);
     lines.push("};");
     lines.push("");
