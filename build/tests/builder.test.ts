@@ -122,10 +122,12 @@ describe("buildSite", () => {
       expect(indexPage?.htmlPath).toBe(join(TEST_OUT_DIR, "index.html"));
 
       const aboutPage = result.pages.find((p) => p.route === "/about");
-      expect(aboutPage?.htmlPath).toBe(join(TEST_OUT_DIR, "about.html"));
+      expect(aboutPage?.htmlPath).toBe(join(TEST_OUT_DIR, "about/index.html"));
 
       const blogPage = result.pages.find((p) => p.route === "/blog/post");
-      expect(blogPage?.htmlPath).toBe(join(TEST_OUT_DIR, "blog/post.html"));
+      expect(blogPage?.htmlPath).toBe(
+        join(TEST_OUT_DIR, "blog/post/index.html"),
+      );
 
       const notFoundPage = result.pages.find((p) => p.route === "/_not-found");
       expect(notFoundPage?.htmlPath).toBe(

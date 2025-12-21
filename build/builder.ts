@@ -402,9 +402,10 @@ async function buildSystemPage(
 
 /**
  * Convert a route to an HTML output path.
+ * Uses directory-style URLs for static hosting compatibility.
  * "/" -> "index.html"
- * "/about" -> "about.html"
- * "/blog/post" -> "blog/post.html"
+ * "/about" -> "about/index.html"
+ * "/blog/post" -> "blog/post/index.html"
  */
 function routeToHtmlPath(route: string, outDir: string): string {
   // deno-coverage-ignore-start -- security check: routes come from filesystem scanning, can't contain traversal in practice
@@ -418,7 +419,7 @@ function routeToHtmlPath(route: string, outDir: string): string {
     return join(outDir, "index.html");
   }
 
-  const htmlPath = resolve(join(outDir, `${route.slice(1)}.html`));
+  const htmlPath = resolve(join(outDir, route.slice(1), "index.html"));
   const resolvedOutDir = resolve(outDir);
 
   // deno-coverage-ignore-start -- security check: routes come from filesystem scanning, can't escape outDir in practice
