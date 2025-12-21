@@ -1,6 +1,6 @@
 {
   "name": "@tabirun/pages",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "license": "MIT",
   "nodeModulesDir": "auto",
   "compilerOptions": {
@@ -35,8 +35,8 @@
     "./preact/hooks": "./preact/hooks.ts"
   },
   "tasks": {
-    "test": "deno test --allow-all --clean --coverage=coverage && deno coverage coverage --exclude='.*/tests/fixtures/.*' --exclude='.*subprocess\\.ts$' --exclude='.*/T/.*' --exclude='^file:///tmp/.*' --exclude='.*\\.cache/.*'",
-    "coverage": "deno coverage coverage --exclude='.*/tests/fixtures/.*' --exclude='.*subprocess\\.ts$' --exclude='.*/T/.*' --exclude='^file:///tmp/.*' --exclude='.*\\.cache/.*'",
+    "test": "deno test --allow-all --clean --coverage=coverage && deno coverage coverage --exclude='.*/tests/fixtures/.*' --exclude='.*subprocess\\.ts$' --exclude='.*/T/.*' --exclude='^file:///tmp/.*' --exclude='.*\\.cache/.*' --exclude='.*/Library/Caches/.*'",
+    "coverage": "deno coverage coverage --exclude='.*/tests/fixtures/.*' --exclude='.*subprocess\\.ts$' --exclude='.*/T/.*' --exclude='^file:///tmp/.*' --exclude='.*\\.cache/.*' --exclude='.*/Library/Caches/.*'",
     "lint": "deno lint",
     "format": "deno fmt",
     "check": "deno check ."
